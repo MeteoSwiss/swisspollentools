@@ -133,3 +133,57 @@ def PlPsCWorker(worker):
         return
 
     return wrapper
+
+def CollateWorker(worker):
+    def wrapper(
+        config,
+        pull_port: int,
+        push_port: int,
+        control_port: int,
+        timeout: float=float("inf"),
+        on_startup: Optional[Callable]=None,
+        on_request: Optional[Callable]=None,
+        on_closure: Optional[Callable]=None,
+        **kwargs
+    ):
+        if on_startup is not None:
+            on_startup()
+
+        ( context, receiver, sender,  control, poller ) = \
+            getPlPsCChannels(pull_port, push_port, control_port)
+        time.sleep(LAUNCH_SLEEP_TIME)
+
+        # Message listening loop
+        timeout_start = time.time()
+        requests = []
+        while time.time() < timeout_start + timeout:
+            socks = dict(poller.poll())
+
+            # Pulled messages case
+            if socks.get(receiver) == zmq.POLLIN:
+                request = receiver.recv_json()
+
+                if on_request is not None:
+                    on_request(request)
+
+                requests.append(request)
+                sender.send_json(EndOfTask())                        
+
+            # Control messages case
+            if socks.get(control) == zmq.POLLIN:
+                # If the worker receive an EOP message, the process
+                # is terminated.
+                request = control.recv_json()
+
+                if iseop(request):
+                    break
+
+        response = worker(requests, config, **kwargs)
+        sender.send_json(response)
+
+        if on_closure is not None:
+            on_closure()
+
+        return
+
+    return wrapper
