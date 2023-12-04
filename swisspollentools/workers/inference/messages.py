@@ -3,9 +3,9 @@ from typing import Any, Dict, List, Tuple
 from swisspollentools.utils import *
 
 def InferenceRequest(
-    file_path: Dict,
-    batch_id: Any,
-    response: Dict,
+    file_path: str,
+    batch_id: Any=None,
+    response: Dict={},
 ):
     if not ismsg(response):
         raise ValueError()
@@ -67,11 +67,11 @@ def parseinreq(msg: Dict) -> Tuple[Dict, Dict, List[int], List[int]]:
 
 def InferenceResponse(
     file_path: str,
-    batch_id: Any,
+    batch_id: Any=None,
     metadata=None,
     prediction=None,
-    *args: Any,
-    **kwargs: Any
+    *args,
+    **kwargs
 ) -> Dict:
     msg = {REQUEST_TYPE_KEY: INFERENCE_RESPONSE_VALUE}
     msg[FILE_PATH_KEY] = file_path

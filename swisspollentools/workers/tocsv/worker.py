@@ -10,13 +10,16 @@ from swisspollentools.workers.tocsv.messages import *
 def ToCSV(
     request: Dict,
     config: ToCSVWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ):
-    file_path = ".".join([
-        Path(request[FILE_PATH_KEY]).stem, 
-        str(request[BATCH_ID_KEY]), 
-        "csv"
-    ])
+    if request[BATCH_ID_KEY] is not None:
+        file_path = ".".join([
+            Path(request[FILE_PATH_KEY]).stem, 
+            str(request[BATCH_ID_KEY]), 
+            "csv"
+        ])
+    else:
+        file_path = ".".join([Path(request[FILE_PATH_KEY]).stem, "csv"])
     file_path = config.tocsvw_output_directory.joinpath(file_path)
     file_path = str(file_path)
 
@@ -32,7 +35,7 @@ def ToCSV(
 def ToCSVWorker(
     request: Dict,
     config: ToCSVWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     if not istocsvreq(request):
         raise ValueError()

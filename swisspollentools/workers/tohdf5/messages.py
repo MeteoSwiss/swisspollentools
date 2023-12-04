@@ -4,8 +4,8 @@ from swisspollentools.utils import *
 
 def ToHDF5Request(
     file_path: str,
-    batch_id: Any,
-    response: Dict
+    batch_id: Any=None,
+    response: Dict={}
 ) -> Dict:
     if not ismsg(response):
         raise ValueError()
@@ -18,7 +18,7 @@ def ToHDF5Request(
     msg = flatten_dictionary(msg)
     return msg
 
-def ToHDF5Req(*args: Any, **kwargs: Any) -> Dict:
+def ToHDF5Req(*args, **kwargs) -> Dict:
     return ToHDF5Request(*args, **kwargs)
 
 def istohdf5req(msg: Dict) -> bool:
@@ -28,7 +28,10 @@ def istohdf5req(msg: Dict) -> bool:
     return msg[REQUEST_TYPE_KEY] == TOHDF5_REQUEST_VALUE
 
 def ToHDF5Response(
-    file_path: str
+    file_path: str,
+    batch_id: Any=None,
+    *args,
+    **kwargs
 ) -> Dict:
     msg = {REQUEST_TYPE_KEY: TOHDF5_RESPONSE_VALUE}
     msg[FILE_PATH_KEY] = file_path

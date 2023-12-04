@@ -211,7 +211,7 @@ def __zip_filtered_recs_generator(
 def ZipExtraction(
     request: Dict,
     config: ExtractionWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     """
     Performs extraction of events and associated recordings from a zip archive.
@@ -266,7 +266,7 @@ def ZipExtraction(
 def S3ZipExtraction(
     request: Dict,
     config: ExtractionWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     """
     Performs extraction of events and associated recordings from a zip archive
@@ -330,7 +330,7 @@ def __hdf5_get_keys(record) -> List[str]:
 def HDF5Extraction(
     request: Dict,
     config: ExtractionWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     """
     Performs extraction of events and associated data from an HDF5 file.
@@ -387,7 +387,7 @@ def HDF5Extraction(
 def CSVExtraction(
     request: Dict,
     config: ExtractionWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ):
     record = pd.read_csv(request[FILE_PATH_KEY])
 
@@ -421,7 +421,7 @@ def CSVExtraction(
 def ExtractionWorker(
     request: Dict,
     config: ExtractionWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     """
     Pull-Push-Control worker function for handling extraction requests.

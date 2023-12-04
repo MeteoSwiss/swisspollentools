@@ -10,7 +10,7 @@ from swisspollentools.workers.inference.messages import *
 def Inference(
     request: Dict,
     config: InferenceWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     if not "model" in kwargs.keys():
         raise RuntimeError()
@@ -31,7 +31,7 @@ def Inference(
     dataset = prune_dictionary(dataset)
     dataset = tf.data.Dataset.from_tensor_slices(dataset)
     dataset = dataset.batch(config.inw_batch_size)
-    dataset = dataset.cache().prefetch(buffer_size=tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
     predictions = []
     for batch in dataset:
@@ -51,7 +51,7 @@ def Inference(
 def InferenceWorker(
     request: Dict,
     config: InferenceWorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     if not isinreq(request):
         raise ValueError()

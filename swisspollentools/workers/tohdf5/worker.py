@@ -10,13 +10,16 @@ from swisspollentools.workers.tohdf5.messages import *
 def ToHDF5(
     request: Dict,
     config: ToHDF5WorkerConfig,
-    **kwargs: Any
+    **kwargs
 ):
-    file_path = ".".join([
-        Path(request[FILE_PATH_KEY]).stem, 
-        str(request[BATCH_ID_KEY]), 
-        "hdf5"
-    ])
+    if request[BATCH_ID_KEY] is not None:
+        file_path = ".".join([
+            Path(request[FILE_PATH_KEY]).stem, 
+            str(request[BATCH_ID_KEY]), 
+            "hdf5"
+        ])
+    else:
+        file_path = ".".join([Path(request[FILE_PATH_KEY]).stem, "csv"])
     file_path = config.tohdf5w_output_directory.joinpath(file_path)
     file_path = str(file_path)
 
@@ -40,7 +43,7 @@ def ToHDF5(
 def ToHDF5Worker(
     request: Dict,
     config: ToHDF5WorkerConfig,
-    **kwargs: Any
+    **kwargs
 ) -> Generator:
     if not istohdf5req(request):
         raise ValueError()

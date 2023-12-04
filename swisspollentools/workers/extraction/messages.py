@@ -2,7 +2,11 @@ from typing import Any, Dict
 
 from swisspollentools.utils import *
 
-def ExtractionRequest(file_path: str) -> Dict:
+def ExtractionRequest(
+    file_path: str,
+    batch_id: Any=None,
+    response: Dict={}
+) -> Dict:
     """
     Creates an Extraction Request message.
 
@@ -18,7 +22,7 @@ def ExtractionRequest(file_path: str) -> Dict:
     msg = flatten_dictionary(msg)
     return msg
 
-def ExReq(*args: Any, **kwargs: Any) -> Dict:
+def ExReq(*args, **kwargs) -> Dict:
     """
     Alias for ExtractionRequest.
     """
@@ -119,14 +123,14 @@ def hascsvextension(msg: Dict) -> bool:
 
 def ExtractionResponse(
     file_path: str,
-    batch_id: Any,
+    batch_id: Any=None,
     metadata=None,
     fluodata=None,
     rec_properties=None,
     rec0=None,
     rec1=None,
-    *args: Any,
-    **kwargs: Any
+    *args,
+    **kwargs
 ) -> Dict:
     """
     Creates an Extraction Response message.
@@ -176,7 +180,7 @@ def ExtractionResponse(
     msg = flatten_dictionary(msg)
     return msg
 
-def ExRes(*args: Any, **kwargs: Any) -> Dict:
+def ExRes(*args, **kwargs) -> Dict:
     """
     Alias for ExtractionResponse.
     """
