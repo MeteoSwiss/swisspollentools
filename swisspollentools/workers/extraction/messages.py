@@ -17,7 +17,7 @@ def ExtractionRequest(
     dict: Extraction Request message.
     """
     msg = {REQUEST_TYPE_KEY: EXTRACTION_REQUEST_VALUE}
-    msg[FILE_PATH_KEY] = file_path
+    msg[FILE_PATH_KEY] = str(file_path)
 
     msg = flatten_dictionary(msg)
     return msg
@@ -151,7 +151,7 @@ def ExtractionResponse(
     dict: Extraction Response message.
     """
     msg = {REQUEST_TYPE_KEY: EXTRACTION_RESPONSE_VALUE}
-    msg[FILE_PATH_KEY] = file_path
+    msg[FILE_PATH_KEY] = str(file_path)
     msg[BATCH_ID_KEY] = batch_id
 
     if metadata is not None:

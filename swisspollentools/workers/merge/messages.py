@@ -11,7 +11,7 @@ def MergeRequest(
         raise ValueError()
 
     msg = {REQUEST_TYPE_KEY: MERGE_REQUEST_VALUE}
-    msg[FILE_PATH_KEY] = file_path
+    msg[FILE_PATH_KEY] = str(file_path)
     msg[BATCH_ID_KEY] = batch_id
     msg[BODY_KEY] = get_body(response)
 
@@ -34,7 +34,7 @@ def MergeResponse(
     **kwargs
 ) -> Dict:
     msg = {REQUEST_TYPE_KEY: MERGE_RESPONSE_VALUE}
-    msg[FILE_PATH_KEY] = file_path
+    msg[FILE_PATH_KEY] = str(file_path)
     msg[BATCH_ID_KEY] = batch_id
 
     for k, v in enumerate(args):

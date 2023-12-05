@@ -16,7 +16,7 @@ def InferenceRequest(
     rec1 = response[REC1_KEY] if REC1_KEY in response.keys() else None
 
     msg = {REQUEST_TYPE_KEY: INFERENCE_REQUEST_VALUE}
-    msg[FILE_PATH_KEY] = file_path
+    msg[FILE_PATH_KEY] = str(file_path)
     msg[BATCH_ID_KEY] = batch_id
 
     if metadata is not None:
@@ -74,7 +74,7 @@ def InferenceResponse(
     **kwargs
 ) -> Dict:
     msg = {REQUEST_TYPE_KEY: INFERENCE_RESPONSE_VALUE}
-    msg[FILE_PATH_KEY] = file_path
+    msg[FILE_PATH_KEY] = str(file_path)
     msg[BATCH_ID_KEY] = batch_id
 
     if metadata is not None:
