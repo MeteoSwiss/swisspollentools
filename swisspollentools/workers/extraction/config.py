@@ -1,4 +1,6 @@
-from typing import Optional, List, Dict
+from pathlib import Path
+
+from typing import Optional, List, Dict, Union
 from dataclasses import dataclass, InitVar
 
 from swisspollentools.utils import *
@@ -31,6 +33,7 @@ class ExtractionWorkerConfig:
     exw_keep_metadata_key: Optional[List[str]]=None
     exw_keep_fluorescence_keys: Optional[List[str]]=None
     exw_keep_rec_properties_keys: Optional[List[str]]=None
+    exw_tmp_directory: Optional[Union[Path, str]]=""
     exw_filters: InitVar[Dict]={}
 
     def __post_init__(self, exw_filters):

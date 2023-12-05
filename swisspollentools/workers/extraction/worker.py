@@ -311,10 +311,10 @@ def S3ZipExtraction(
     bucket, key = match["bucket"], match["key"]
 
     with tempfile.NamedTemporaryFile(
-        prefix=config.tmp_directory,
+        prefix=config.exw_tmp_directory,
         suffix=".zip"
     ) as file:
-        kwargs["s3"].downoad_fileobj(bucket, key, file)
+        kwargs["s3"].download_fileobj(bucket, key, file)
 
         request = ExtractionRequest(file.name)
         yield from ZipExtraction(request, config, **kwargs)
