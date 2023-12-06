@@ -129,6 +129,7 @@ def ExtractionResponse(
     rec_properties=None,
     rec0=None,
     rec1=None,
+    label=None,
     *args,
     **kwargs
 ) -> Dict:
@@ -168,7 +169,10 @@ def ExtractionResponse(
     
     if rec1 is not None:
         msg[REC1_KEY] = rec1
-    
+
+    if label is not None:
+        msg[LABEL_KEY] = label
+
     for k, v in enumerate(args):
         k = KEY_SEP.join([BODY_KEY, str(k)])
         msg[k] = v

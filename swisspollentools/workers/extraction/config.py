@@ -30,6 +30,7 @@ class ExtractionWorkerConfig:
     exw_keep_fluorescence: bool=True
     exw_keep_rec_properties: bool=True
     exw_keep_rec: bool=True
+    exw_keep_label: bool=True
     exw_keep_metadata_key: Optional[List[str]]=None
     exw_keep_fluorescence_keys: Optional[List[str]]=None
     exw_keep_rec_properties_keys: Optional[List[str]]=None

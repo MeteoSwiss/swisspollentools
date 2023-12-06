@@ -17,7 +17,7 @@ import numpy as np
 from swisspollentools.workers.extraction.config import *
 from swisspollentools.workers.extraction.messages import *
 from swisspollentools.utils import *
-from swisspollentools.utils.constants import _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, _REC_KEY
+from swisspollentools.utils.constants import _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, _REC_KEY, _LABEL_KEY
 
 def __zip_get_index(
     record: zipfile.Path, 
@@ -365,6 +365,8 @@ def HDF5Extraction(
         keys.extend([el for el in _keys if el.startswith(_REC_PROPERTIES_KEY)])
     if config.exw_keep_rec:
         keys.extend([el for el in _keys if el.startswith(_REC_KEY)])
+    if config.exw_keep_label:
+        keys.extend([el for el in _keys if el.startswith(_LABEL_KEY)])
 
     n_events = [len(record[k]) for k in keys]
     if not all([n == n_events[0] for n in n_events]):
@@ -401,6 +403,8 @@ def CSVExtraction(
         keys.extend([el for el in _keys if el.startswith(_REC_PROPERTIES_KEY)])
     if config.exw_keep_rec:
         keys.extend([el for el in _keys if el.startswith(_REC_KEY)])
+    if config.exw_keep_label:
+        keys.extend([el for el in _keys if el.startswith(_LABEL_KEY)])
 
     n_events = len(record)
 
