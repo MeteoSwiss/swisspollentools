@@ -60,8 +60,8 @@ def parseinreq(msg: Dict) -> Tuple[Dict, Dict, List[int], List[int]]:
     
     metadata = get_subdictionary(msg, METADATA_KEY, KEY_SEP)
     fluorescence_data = get_subdictionary(msg, FLUODATA_KEY, KEY_SEP)
-    rec0 = msg[REC0_KEY]
-    rec1 = msg[REC1_KEY]
+    rec0 = msg[REC0_KEY] if REC0_KEY in msg.keys() else None
+    rec1 = msg[REC1_KEY] if REC1_KEY in msg.keys() else None
 
     return metadata, fluorescence_data, rec0, rec1
 
