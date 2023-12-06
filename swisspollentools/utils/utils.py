@@ -63,10 +63,10 @@ def flatten_structure(structure):
         return list(flatten(structure))
 
     if isinstance(structure[0], np.ndarray):
-        return np.concatenate(structure, axis=0).tolist()
+        return np.concatenate(structure, axis=0)
     
     if isinstance(structure[0], tf.Tensor):
-        return tf.concat(structure, axis=0).numpy().tolist()
+        return tf.concat(structure, axis=0).numpy()
 
     return structure
 

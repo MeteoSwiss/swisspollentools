@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from typing import Any, List, Dict, Tuple, Generator
+from typing import Dict, Generator
 
 from swisspollentools.utils import *
 from swisspollentools.workers.inference.config import *

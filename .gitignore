@@ -1,4 +1,8 @@
 *.pyc
+*.egg-info
 __pycache__/
+tests/
+out/
+tmp/
 dev.py
 dev.ipynb

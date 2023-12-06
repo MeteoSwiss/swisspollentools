@@ -52,7 +52,7 @@ def Collator(
         socks = dict(poller.poll())
 
         if socks.get(receiver) == zmq.POLLIN:
-            request = receiver.recv_json()
+            request = recv_request(receiver)
 
             if iseot(request):
                 eot_counter += 1
@@ -64,17 +64,17 @@ def Collator(
                 response=request, 
                 **kwargs
             )
-            sender.send_json(request)
+            send_request(sender, request)
             n_tasks_counter += 1
 
         if socks.get(scaffold_receiver) == zmq.POLLIN:
-            request = scaffold_receiver.recv_json()
+            request = recv_request(scaffold_receiver)
 
             if isexnit(request):
                 n_tasks = request[N_ITEMS_KEY]
 
-    scaffold_sender.send_json(ExpectedNItems(n_tasks_counter))
-    control.send_json(EndOfProcess())
+    send_request(scaffold_sender, ExpectedNItems(n_tasks_counter))
+    send_request(control, EndOfProcess())
 
     if on_closure is not None:
         on_closure()

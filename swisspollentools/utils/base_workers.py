@@ -6,6 +6,7 @@ from typing import Callable, Optional
 
 from swisspollentools.utils.global_messages import *
 from swisspollentools.utils.constants import *
+from swisspollentools.utils.requests import *
 
 def getPlPsCChannels(
     pull_port: int,
@@ -108,21 +109,21 @@ def PlPsCWorker(worker):
 
             # Pulled messages case
             if socks.get(receiver) == zmq.POLLIN:
-                request = receiver.recv_json()
+                request = recv_request(receiver)
 
                 if on_request is not None:
                     on_request(request)
 
                 for response in worker(request, config, **kwargs):
-                    sender.send_json(response)
+                    send_request(sender, response)
 
-                sender.send_json(EndOfTask())                        
+                send_request(sender, EndOfTask())                 
 
             # Control messages case
             if socks.get(control) == zmq.POLLIN:
                 # If the worker receive an EOP message, the process
                 # is terminated.
-                request = control.recv_json()
+                request = recv_request(control)
 
                 if iseop(request):
                     break
@@ -161,25 +162,25 @@ def CollateWorker(worker):
 
             # Pulled messages case
             if socks.get(receiver) == zmq.POLLIN:
-                request = receiver.recv_json()
+                request = recv_request(receiver)
 
                 if on_request is not None:
                     on_request(request)
 
                 requests.append(request)
-                sender.send_json(EndOfTask())                        
+                send_request(sender, EndOfTask())           
 
             # Control messages case
             if socks.get(control) == zmq.POLLIN:
                 # If the worker receive an EOP message, the process
                 # is terminated.
-                request = control.recv_json()
+                request = recv_request(control)
 
                 if iseop(request):
                     break
 
         response = worker(requests, config, **kwargs)
-        sender.send_json(response)
+        send_request(sender, response)
 
         if on_closure is not None:
             on_closure()

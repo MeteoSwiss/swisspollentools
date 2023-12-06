@@ -30,9 +30,9 @@ def Ventilator(
     time.sleep(LAUNCH_SLEEP_TIME)
 
     for i, el in enumerate(iterable, 1):
-        sender.send_json(request_fn(el, **kwargs))
+        send_request(sender, request_fn(el, **kwargs))
 
-    scaffold_sender.send_json(ExpectedNItems(i))
+    send_request(scaffold_sender, ExpectedNItems(i))
 
     if on_closure is not None:
         on_closure()

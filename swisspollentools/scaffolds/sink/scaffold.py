@@ -42,18 +42,18 @@ def Sink(
         socks = dict(poller.poll())
 
         if socks.get(receiver) == zmq.POLLIN:
-            request = receiver.recv_json()
+            request = recv_request(receiver)
 
             if iseot(request):
                 eot_counter += 1
 
         if socks.get(scaffold_receiver) == zmq.POLLIN:
-            request = scaffold_receiver.recv_json()
+            request = recv_request(scaffold_receiver)
 
             if isexnit(request):
                 n_tasks = request[N_ITEMS_KEY]
 
-    control.send_json(EndOfProcess())
+    send_request(control, EndOfProcess())
 
     if on_closure is not None:
         on_closure()
