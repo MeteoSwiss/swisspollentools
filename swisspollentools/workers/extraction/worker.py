@@ -17,7 +17,7 @@ import numpy as np
 from swisspollentools.workers.extraction.config import *
 from swisspollentools.workers.extraction.messages import *
 from swisspollentools.utils import *
-from swisspollentools.utils.constants import _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, _REC_KEY, _LABEL_KEY
+from swisspollentools.utils.constants import _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, _REC_KEY, _LABEL_KEY, _NP_ARRAY_DATA_KEYS
 
 def __zip_get_index(
     record: zipfile.Path, 
@@ -378,7 +378,9 @@ def HDF5Extraction(
 
         data = {k: record[k][start_slice:min(start_slice+config.exw_batch_size, n_events)] \
                     for k in keys}
-        data = {k: v.tolist() for k, v in data.items()}
+        data = {k: v.tolist() if not k.startswith(_NP_ARRAY_DATA_KEYS) \
+                    else v \
+                    for k, v in data.items()}
 
         yield ExtractionResponse(
             file_path=request[FILE_PATH_KEY],
@@ -413,7 +415,11 @@ def CSVExtraction(
 
         data = {k: record[k][start_slice:min(start_slice+config.exw_batch_size, n_events)] \
                     for k in keys}
-        data = {k: v.to_list() for k, v in data.items()}
+        data = {
+            k: v.to_list() if not k.startswith(_NP_ARRAY_DATA_KEYS) \
+                else np.stack(v.apply(lambda el: np.array(eval(el))).to_list(), axis=0) \
+                for k, v in data.items()
+        }
 
         yield ExtractionResponse(
             file_path=request[FILE_PATH_KEY],
