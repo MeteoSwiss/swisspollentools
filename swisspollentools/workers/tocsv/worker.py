@@ -24,6 +24,10 @@ def ToCSV(
     file_path = str(file_path)
 
     data = get_body(request)
+    data = {
+        k: v.tolist() if isinstance(v, np.ndarray) else v \
+            for k, v in data.items()
+    }
     data = pd.DataFrame(data)
     data.to_csv(file_path, index=False)
 

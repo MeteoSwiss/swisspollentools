@@ -89,7 +89,7 @@ def __zip_read_event(
     if keep_metadata_key:
         metadata = {k: metadata[k] for k in keep_metadata_key}
     if keep_fluorescence_keys:
-        fluorescence_data = {k: fluorescence_data[k] \
+        fluorescence_data = {k: np.array(fluorescence_data[k]) \
                                 for k in keep_fluorescence_keys}
     if keep_rec_properties_keys:
         rec0_properties = {k: rec0_properties[k] \
@@ -122,7 +122,7 @@ def __zip_read_rec(
     np.ndarray: A flattened NumPy array representing the pixel values of the image.
     """
     rec = BytesIO(record.joinpath(id + suffix).read_bytes())
-    rec = np.array(Image.open(rec)).flatten()
+    rec = np.array(Image.open(rec))
 
     return rec
 

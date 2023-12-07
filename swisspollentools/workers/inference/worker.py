@@ -20,8 +20,8 @@ def Inference(
 
     fluorescence_data = {new_key: fluorescence_data[old_key] \
                          for old_key, new_key in config.inw_from_fluorescence_keys}
-    rec0 = np.array(rec0).reshape(-1, *config.inw_rec_shape) / 2 ** config.inw_rec_precision
-    rec1 = np.array(rec1).reshape(-1, *config.inw_rec_shape) / 2 ** config.inw_rec_precision
+    rec0 = rec0 / 2 ** config.inw_rec_precision
+    rec1 = rec1 / 2 ** config.inw_rec_precision
 
     dataset = {
         "fluorescence_data": fluorescence_data if config.inw_from_fluorescence else None,
@@ -38,7 +38,7 @@ def Inference(
         prediction = kwargs["model"].predict(batch, verbose=False)
         prediction = config.inw_post_processing_fn(prediction)
         predictions.append(prediction)
-    predictions = collate_fn(predictions)
+    predictions = collate_fn(predictions, numpy_strategy="concatenate")
 
     yield InferenceResponse(
         file_path=request[FILE_PATH_KEY],
