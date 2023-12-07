@@ -18,8 +18,10 @@ def Inference(
     ( metadata, fluorescence_data,
         rec0, rec1 ) = parseinreq(request)
 
-    fluorescence_data = {new_key: fluorescence_data[old_key] \
-                         for old_key, new_key in config.inw_from_fluorescence_keys}
+    fluorescence_data = {
+        new_key: fluorescence_data[old_key] \
+            for old_key, new_key in config.inw_from_fluorescence_keys.items()
+    }
     rec0 = rec0 / 2 ** config.inw_rec_precision
     rec1 = rec1 / 2 ** config.inw_rec_precision
 
