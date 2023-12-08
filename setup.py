@@ -11,6 +11,7 @@ setup(
         'pandas',
         'h5py',
         'tensorflow',
-        'pyzmq'
+        'pyzmq',
+        'sklearn'
     ]
 )

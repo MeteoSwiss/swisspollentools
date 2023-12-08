@@ -1,10 +1,12 @@
 import time
+from typing import Callable, Optional, Tuple
 
 import zmq
 
-from typing import Callable, Optional, Tuple
-
-from swisspollentools.utils import *
+from swisspollentools.utils import \
+    LAUNCH_SLEEP_TIME, FILE_PATH_KEY, BATCH_ID_KEY, N_ITEMS_KEY, \
+    send_request, recv_request, \
+    ExpectedNItems, EndOfProcess, isexnit, iseot
 
 def Collator(
     request_fn: Callable,
@@ -61,7 +63,7 @@ def Collator(
             request = request_fn(
                 file_path=request[FILE_PATH_KEY],
                 batch_id=request[BATCH_ID_KEY],
-                response=request, 
+                response=request,
                 **kwargs
             )
             send_request(sender, request)
@@ -78,5 +80,3 @@ def Collator(
 
     if on_closure is not None:
         on_closure()
-
-    return

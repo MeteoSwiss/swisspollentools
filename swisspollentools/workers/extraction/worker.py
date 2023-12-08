@@ -9,18 +9,26 @@ import json
 import h5py
 import pandas as pd
 
-from typing import Any, Dict, Generator, List, Tuple
+from typing import Dict, Generator, List, Tuple
 
 from PIL import Image
 import numpy as np
 
-from swisspollentools.workers.extraction.config import *
-from swisspollentools.workers.extraction.messages import *
-from swisspollentools.utils import *
-from swisspollentools.utils.constants import _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, _REC_KEY, _LABEL_KEY, _NP_ARRAY_DATA_KEYS
+from swisspollentools.workers.extraction.config import \
+    FILTER_PREFIX, ExtractionWorkerConfig
+from swisspollentools.workers.extraction.messages import \
+    ExtractionResponse, ExtractionRequest, \
+    isexreq, hass3scheme, haszipextension, hashdf5extension, hascsvextension
+from swisspollentools.utils import \
+    FILE_PATH_KEY, POLLENO_EVENT_SUFFIX, \
+    POLLENO_REC0_SUFFIX, POLLENO_REC1_SUFFIX, \
+    PlPsCWorker, batchify
+from swisspollentools.utils.constants import \
+    _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, \
+    _REC_KEY, _LABEL_KEY, _NP_ARRAY_DATA_KEYS
 
 def __zip_get_index(
-    record: zipfile.Path, 
+    record: zipfile.Path,
     *args: List[str]
 ) -> List[str]:
     """
@@ -41,18 +49,19 @@ def __zip_get_index(
     - File names are obtained by removing the specified patterns from the end
     of the file names.
     """
-    index_fn = lambda pattern: set([
-        el.name.removesuffix(pattern) \
-            for el in record.iterdir() \
-            if el.name.endswith(pattern)
-    ])
+    def index_fn(pattern):
+        return {
+            el.name.removesuffix(pattern) \
+                for el in record.iterdir() \
+                if el.name.endswith(pattern)
+        }
 
     index = set.intersection(*[index_fn(arg) for arg in args if isinstance(arg, str)])
     return list(index)
 
 def __zip_read_event(
     record: zipfile.Path,
-    id: str,
+    event_id: str,
     keep_metadata_key: List[str]=[],
     keep_fluorescence_keys: List[str]=[],
     keep_rec_properties_keys: List[str]=[]
@@ -63,7 +72,7 @@ def __zip_read_event(
     Parameters:
     - record (zipfile.Path): The zipfile.Path object representing the zip 
     archive.
-    - id (str): The identifier of the event to be read.
+    - event_id (str): The identifier of the event to be read.
     - keep_metadata_key (List[str], optional): List of metadata keys to retain,
     default is an empty list.
     - keep_fluorescence_keys (List[str], optional): List of fluorescence data
@@ -78,7 +87,7 @@ def __zip_read_event(
     - A tuple containing two dictionaries representing recording properties for
     two images (rec0 and rec1).
     """
-    event = record.joinpath(id + POLLENO_EVENT_SUFFIX).read_bytes()
+    event = record.joinpath(event_id + POLLENO_EVENT_SUFFIX).read_bytes()
     event = json.loads(event)
 
     metadata = event["metadata"]
@@ -105,7 +114,7 @@ def __zip_read_event(
 
 def __zip_read_rec(
     record: zipfile.Path,
-    id: str,
+    event_id: str,
     suffix: str
 ) -> np.ndarray:
     """
@@ -121,7 +130,7 @@ def __zip_read_rec(
     Returns:
     np.ndarray: A flattened NumPy array representing the pixel values of the image.
     """
-    rec = BytesIO(record.joinpath(id + suffix).read_bytes())
+    rec = BytesIO(record.joinpath(event_id + suffix).read_bytes())
     rec = np.array(Image.open(rec))
 
     return rec
@@ -152,10 +161,10 @@ def __zip_filter_indexed_events(
     - It applies filters specified in the config object to exclude events based
     on recording properties.
     """
-    for id in index:
+    for event_id in index:
         event = __zip_read_event(
             record=record,
-            id=id,
+            event_id=event_id,
             keep_metadata_key=config.exw_keep_metadata_key,
             keep_fluorescence_keys=config.exw_keep_fluorescence_keys,
             keep_rec_properties_keys=config.exw_keep_rec_properties_keys
@@ -170,7 +179,7 @@ def __zip_filter_indexed_events(
         if any(filters):
             continue
 
-        yield id, (metadata, fluodata, rec_properties)
+        yield event_id, (metadata, fluodata, rec_properties)
 
 def __zip_filtered_recs_generator(
     record: zipfile.Path,
@@ -202,11 +211,11 @@ def __zip_filtered_recs_generator(
     - Yields tuples containing event ID, metadata, fluorescence data, recording 
     properties, and flattened recording data.
     """
-    for id, data in index:
-        rec0 = __zip_read_rec(record, id, POLLENO_REC0_SUFFIX)
-        rec1 = __zip_read_rec(record, id, POLLENO_REC1_SUFFIX)
+    for event_id, data in index:
+        rec0 = __zip_read_rec(record, event_id, POLLENO_REC0_SUFFIX)
+        rec1 = __zip_read_rec(record, event_id, POLLENO_REC1_SUFFIX)
 
-        yield id, (*data, rec0, rec1)
+        yield event_id, (*data, rec0, rec1)
 
 def ZipExtraction(
     request: Dict,
@@ -303,9 +312,9 @@ def S3ZipExtraction(
         # Process each Extraction Response message
         pass
     """
-    if not "s3" in kwargs.keys():
+    if "s3" not in kwargs:
         raise RuntimeError()
-    
+
     s3_path_pattern = r"^s3:\/\/(?P<bucket>\S*?)\/(?P<key>\S*?)$"
     match = re.match(s3_path_pattern, request[FILE_PATH_KEY])
     bucket, key = match["bucket"], match["key"]
@@ -369,7 +378,7 @@ def HDF5Extraction(
         keys.extend([el for el in _keys if el.startswith(_LABEL_KEY)])
 
     n_events = [len(record[k]) for k in keys]
-    if not all([n == n_events[0] for n in n_events]):
+    if not all(n == n_events[0] for n in n_events):
         raise ValueError()
     n_events = n_events[0]
 

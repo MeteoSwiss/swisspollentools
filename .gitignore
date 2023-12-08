@@ -3,6 +3,7 @@
 __pycache__/
 tests/
 out/
+database/
 tmp/
 dev.py
 dev.ipynb

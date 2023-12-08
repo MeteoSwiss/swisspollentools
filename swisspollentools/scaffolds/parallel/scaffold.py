@@ -1,9 +1,12 @@
 import time
-import zmq
-
 from typing import Callable, Optional, Tuple
 
-from swisspollentools.utils import *
+import zmq
+
+from swisspollentools.utils import \
+    LAUNCH_SLEEP_TIME, N_ITEMS_KEY, \
+    recv_request, send_request, \
+    ExpectedNItems, isexnit, iseot
 
 def Parallel(
     pull_port: int,
@@ -25,16 +28,16 @@ def Parallel(
     receiver.connect(f"tcp://127.0.0.1:{pull_port}")
 
     senders = [context.socket(zmq.PUSH) for _ in push_ports]
-    [sender.bind(f"tcp://127.0.0.1:{push_port}") \
-        for sender, push_port in zip(senders, push_ports)]
-    
+    for sender, push_port in zip(senders, push_ports):
+        sender.bind(f"tcp://127.0.0.1:{push_port}")
+
     scaffold_receiver = context.socket(zmq.PAIR)
     scaffold_receiver.connect(f"tcp://127.0.0.1:{scaffold_ports[0]}")
 
     scaffold_senders = [context.socket(zmq.PAIR) for _ in scaffold_ports[1:]]
-    [sender.bind(f"tcp://127.0.0.1:{scaffold_port}") \
-        for sender, scaffold_port in zip(scaffold_senders, scaffold_ports[1:])]
-    
+    for sender, scaffold_port in zip(scaffold_senders, scaffold_ports[1:]):
+        sender.bind(f"tcp://127.0.0.1:{scaffold_port}")
+
     poller = zmq.Poller()
     poller.register(receiver, zmq.POLLIN)
     poller.register(scaffold_receiver, zmq.POLLIN)
@@ -69,5 +72,3 @@ def Parallel(
 
     if on_closure is not None:
         on_closure()
-
-    return

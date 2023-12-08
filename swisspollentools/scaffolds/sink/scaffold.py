@@ -1,10 +1,12 @@
 import time
+from typing import Callable, Optional
 
 import zmq
 
-from typing import Callable, Optional
-
-from swisspollentools.utils import *
+from swisspollentools.utils import \
+    LAUNCH_SLEEP_TIME, N_ITEMS_KEY, \
+    send_request, recv_request, \
+    EndOfProcess, isexnit, iseot
 
 def Sink(
     pull_port: int,
@@ -57,5 +59,3 @@ def Sink(
 
     if on_closure is not None:
         on_closure()
-
-    return

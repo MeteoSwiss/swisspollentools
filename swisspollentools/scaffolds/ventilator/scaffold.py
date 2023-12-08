@@ -1,10 +1,11 @@
 import time
+from typing import Iterable, Callable, Optional
 
 import zmq
 
-from typing import Iterable, Callable, Optional
-
-from swisspollentools.utils import *
+from swisspollentools.utils import \
+    LAUNCH_SLEEP_TIME, \
+    send_request, ExpectedNItems
 
 def Ventilator(
     iterable: Iterable,
@@ -29,12 +30,12 @@ def Ventilator(
 
     time.sleep(LAUNCH_SLEEP_TIME)
 
-    for i, el in enumerate(iterable, 1):
+    n_tasks_counter = 0
+    for el in iterable:
         send_request(sender, request_fn(el, **kwargs))
+        n_tasks_counter += 1
 
-    send_request(scaffold_sender, ExpectedNItems(i))
+    send_request(scaffold_sender, ExpectedNItems(n_tasks_counter))
 
     if on_closure is not None:
         on_closure()
-
-    return

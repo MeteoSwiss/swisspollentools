@@ -1,9 +1,14 @@
 from  multiprocessing import Process
 
 from swisspollentools.scaffolds import Collator, Sink, Ventilator
-from swisspollentools.utils import *
-from swisspollentools.workers import ExtractionRequest, ExtractionWorker, \
-    InferenceRequest, InferenceWorker, MergeRequest, MergeWorker, \
+from swisspollentools.utils import \
+    ATTRIBUTE_SEP, EXTRACTION_WORKER_PREFIX, \
+    INFERENCE_WORKER_PREFIX, TOCSVW_WORKER_PREFIX, \
+    MERGE_WORKER_PREFIX, get_subdictionary
+from swisspollentools.workers import \
+    ExtractionRequest, ExtractionWorker, \
+    InferenceRequest, InferenceWorker, \
+    MergeRequest, MergeWorker, \
     ToCSVRequest, ToCSVWorker
 
 def HPCInferencePipeline(
@@ -76,8 +81,6 @@ def HPCInferencePipeline(
             worker.start()
         for worker in tocsv_workers:
             worker.start()
-
-        return
 
     return run
 
@@ -165,7 +168,5 @@ def HPCMergedInferencePipeline(
         merge_worker.start()
         for worker in tocsv_workers:
             worker.start()
-
-        return
 
     return run
