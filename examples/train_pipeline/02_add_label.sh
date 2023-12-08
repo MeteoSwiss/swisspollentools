@@ -1,9 +1,9 @@
 #!/bin/bash
 
-folder_path="./database"
+DB_FOLDER_PATH="./data"
 
 # Loop through CSV files in the folder
-for file_path in "$folder_path"/*.csv; do
+for file_path in "$DB_FOLDER_PATH"/*.csv; do
     # Extract file name without extension
     file_name=$(basename "$file_path")
     file_name_no_extension="${file_name%.csv}"

@@ -4,14 +4,13 @@ import re
 from swisspollentools.utils import *
 from swisspollentools.workers import \
     ZipExtraction, ExtractionRequest, ExtractionWorkerConfig, \
-    Merge, MergeRequest, MergeWorkerConfig, ToCSV, ToCSVRequest, \
-    ToCSVWorkerConfig
+    ToCSV, ToCSVRequest, ToCSVWorkerConfig
 
 # 1. Define the list of files to create the database
-file_paths = glob.glob("/scratch/mdsb/poleno_datasets_with_fluo/*/*.zip")
+file_paths = glob.glob("./data/*/record_*.zip")
 
 # 2. Define the list of labels
-file_paths_pattern = r"\/scratch\/mdsb\/poleno_datasets_with_fluo\/(?P<label>\w+)\/*"
+file_paths_pattern = r"\.\/data\/(?P<label>\w+)\/record_*.zip"
 labels = [re.match(file_paths_pattern, p).groupdict()["label"] for p in file_paths]
 out_file_paths = [".".join([label, str(i), "csv"]) for i, label in enumerate(labels)]
 
