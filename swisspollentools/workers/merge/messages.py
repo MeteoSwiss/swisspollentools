@@ -21,10 +21,8 @@ def MergeRequest(
 def MeReq(*args, **kwargs) -> Dict:
     return MergeRequest(*args, **kwargs)
 
-def ismereq(msg: Dict) -> bool:
-    if not ismsg(msg):
-        raise ValueError("Calling `ismereq` on non-message dictionnary")
-    
+@assert_ismsg
+def ismereq(msg: Dict) -> bool:    
     return msg[REQUEST_TYPE_KEY] == MERGE_REQUEST_VALUE
 
 def MergeResponse(
@@ -51,8 +49,6 @@ def MergeResponse(
 def MeRes(*args, **kwargs) -> Dict:
     return MergeResponse(*args, **kwargs)
 
-def ismeres(msg: Dict) -> bool:
-    if not ismsg(msg):
-        raise ValueError("Calling `ismeres` on non-message dictionnary")
-    
+@assert_ismsg
+def ismeres(msg: Dict) -> bool:    
     return msg[REQUEST_TYPE_KEY] == MERGE_RESPONSE_VALUE

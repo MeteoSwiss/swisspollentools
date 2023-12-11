@@ -37,6 +37,7 @@ def InferenceRequest(
 def InReq(*args, **kwargs):
     return InferenceRequest(*args, **kwargs)
 
+@assert_ismsg
 def isinreq(msg: Dict) -> bool:
     """
     Returns True if the message is an Inference Request message.
@@ -46,10 +47,7 @@ def isinreq(msg: Dict) -> bool:
 
     Raises:
     - ValueError: If called on a non-message dictionary.
-    """
-    if not ismsg(msg):
-        raise ValueError("Calling `isinreq` on non-message dictionnary")
-    
+    """    
     return msg[REQUEST_TYPE_KEY] == INFERENCE_REQUEST_VALUE
 
 def parseinreq(msg: Dict) -> Tuple[Dict, Dict, List[int], List[int]]:

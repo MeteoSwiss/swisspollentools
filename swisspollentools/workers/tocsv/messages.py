@@ -21,10 +21,8 @@ def ToCSVRequest(
 def ToCSVReq(*args, **kwargs) -> Dict:
     return ToCSVRequest(*args, **kwargs)
 
+@assert_ismsg
 def istocsvreq(msg: Dict) -> bool:
-    if not ismsg(msg):
-        raise ValueError("Calling `istocsvreq` on non-message dictionnary")
-    
     return msg[REQUEST_TYPE_KEY] == TOCSV_REQUEST_VALUE
 
 def ToCSVResponse(
@@ -43,8 +41,6 @@ def ToCSVResponse(
 def ToCSVRes(*args, **kwargs):
     return ToCSVResponse(*args, **kwargs)
 
-def istocsvres(msg: Dict) -> bool:
-    if not ismsg(msg):
-        raise ValueError("Calling `istocsvres` on non-message dictionnary")
-    
+@assert_ismsg
+def istocsvres(msg: Dict) -> bool:    
     return msg[REQUEST_TYPE_KEY] == TOCSV_RESPONSE_VALUE

@@ -28,6 +28,7 @@ def ExReq(*args, **kwargs) -> Dict:
     """
     return ExtractionRequest(*args, **kwargs)
 
+@assert_ismsg
 def isexreq(msg: Dict) -> bool:
     """
     Returns True if the message is an Extraction Request message.
@@ -35,12 +36,9 @@ def isexreq(msg: Dict) -> bool:
     Parameters:
     - msg (dict): Message dictionary.
 
-    Raises:
-    - ValueError: If called on a non-message dictionary.
-    """
-    if not ismsg(msg):
-        raise ValueError("Calling `isexreq` on non-message dictionnary")
-    
+    Returns:
+    bool: True if the message is an ExtractionRequest message, False otherwise.
+    """    
     return msg[REQUEST_TYPE_KEY] == EXTRACTION_REQUEST_VALUE
 
 def __hasscheme(msg: Dict, scheme: str) -> bool:
@@ -190,6 +188,7 @@ def ExRes(*args, **kwargs) -> Dict:
     """
     return ExtractionResponse(*args, **kwargs)
 
+@assert_ismsg
 def isexres(msg: Dict) -> bool:
     """
     Returns True if the message is an Extraction Response message.
@@ -199,8 +198,5 @@ def isexres(msg: Dict) -> bool:
 
     Raises:
     - ValueError: If called on a non-message dictionary.
-    """
-    if not ismsg(msg):
-        raise ValueError("Calling `isexres` on non-message dictionnary")
-    
+    """    
     return msg[REQUEST_TYPE_KEY] == EXTRACTION_RESPONSE_VALUE

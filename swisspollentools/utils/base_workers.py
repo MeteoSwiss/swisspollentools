@@ -1,14 +1,17 @@
+"""
+Base workers as decorators to define new workers for HPC.
+"""
+
 import time
+from typing import Callable, Optional
 
 import zmq
-
-from typing import Callable, Optional
 
 from swisspollentools.utils.global_messages import *
 from swisspollentools.utils.constants import *
 from swisspollentools.utils.requests import *
 
-def getPlPsCChannels(
+def getPullPushChannels(
     pull_port: int,
     push_port: int,
     control_port: int
@@ -51,20 +54,15 @@ def getPlPsCChannels(
 
     return context, receiver, sender, control, poller
 
-def PlPsCWorker(worker):
+def PullPushWorker(worker):
     """
-    Decorator for creating Pull-Push-Control worker functions.
-
-    Parameters:
-    - on_eot (str): Action to take when receiving an EndOfTask (EOT) message.
-    Options: "ignore", "forward".
-    - send_eot (bool): Whether to send an EOT message after processing.
+    Decorator for creating Pull-Push worker functions.
 
     Returns:
     Callable: Decorator function.
 
     Example:
-    @PlPsCWorker
+    @PullPushWorker
     def my_worker(request, config, **kwargs):
         # Worker implementation
         pass
@@ -77,11 +75,12 @@ def PlPsCWorker(worker):
         timeout: float=float("inf"),
         on_startup: Optional[Callable]=None,
         on_request: Optional[Callable]=None,
+        on_failure: Optional[Callable]=None,
         on_closure: Optional[Callable]=None,
         **kwargs
     ) -> None:
         """
-        Wrapper function for the Pull-Push-Control worker.
+        Wrapper function for the Pull-Push worker.
 
         Parameters:
         - config: Configuration object.
@@ -90,6 +89,14 @@ def PlPsCWorker(worker):
         - control_port (int): Port for the control connection (PUB/SUB 
         channel).
         - timeout (float): Timeout for the worker loop.
+        - on_startup (Callable): callable to be executed on the start-up,
+        does not take any arguments
+        - on_request (Callable): callable to be executed on the reception of a
+        new request, takes the request as unique argument
+        - on failure (Callable): callable ot be execute when an error is raised
+        within the worker, takes the error as unique argument.
+        - on_closure (Callable): callable to be executed on the closure, does
+        not take any arguments.
         - **kwargs: Additional keyword arguments.
 
         Returns:
@@ -99,7 +106,7 @@ def PlPsCWorker(worker):
             on_startup()
 
         ( context, receiver, sender,  control, poller ) = \
-            getPlPsCChannels(pull_port, push_port, control_port)
+            getPullPushChannels(pull_port, push_port, control_port)
         time.sleep(LAUNCH_SLEEP_TIME)
 
         # Message listening loop
@@ -114,8 +121,12 @@ def PlPsCWorker(worker):
                 if on_request is not None:
                     on_request(request)
 
-                for response in worker(request, config, **kwargs):
-                    send_request(sender, response)
+                try:
+                    for response in worker(request, config, **kwargs):
+                        send_request(sender, response)
+                except Exception as e:
+                    if on_failure is not None:
+                        on_failure(e)
 
                 send_request(sender, EndOfTask())                 
 
@@ -131,11 +142,21 @@ def PlPsCWorker(worker):
         if on_closure is not None:
             on_closure()
 
-        return
-
     return wrapper
 
 def CollateWorker(worker):
+    """
+    Decorator for creating Collate worker functions.
+
+    Returns:
+    Callable: Decorator function.
+
+    Example:
+    @CollateWorker
+    def my_worker(request, config, **kwargs):
+        # Worker implementation
+        pass
+    """
     def wrapper(
         config,
         pull_port: int,
@@ -144,14 +165,38 @@ def CollateWorker(worker):
         timeout: float=float("inf"),
         on_startup: Optional[Callable]=None,
         on_request: Optional[Callable]=None,
+        on_failure: Optional[Callable]=None,
         on_closure: Optional[Callable]=None,
         **kwargs
     ):
+        """
+        Wrapper function for the Collate worker.
+
+        Parameters:
+        - config: Configuration object.
+        - pull_port (int): Port for the PULL connection.
+        - push_port (int): Port for the PUSH connection.
+        - control_port (int): Port for the control connection (PUB/SUB 
+        channel).
+        - timeout (float): Timeout for the worker loop.
+        - on_startup (Callable): callable to be executed on the start-up,
+        does not take any arguments
+        - on_request (Callable): callable to be executed on the reception of a
+        new request, takes the request as unique argument
+        - on failure (Callable): callable ot be execute when an error is raised
+        within the worker, takes the error as unique argument.
+        - on_closure (Callable): callable to be executed on the closure, does
+        not take any arguments.
+        - **kwargs: Additional keyword arguments.
+
+        Returns:
+        None
+        """
         if on_startup is not None:
             on_startup()
 
         ( context, receiver, sender,  control, poller ) = \
-            getPlPsCChannels(pull_port, push_port, control_port)
+            getPullPushChannels(pull_port, push_port, control_port)
         time.sleep(LAUNCH_SLEEP_TIME)
 
         # Message listening loop
@@ -179,12 +224,14 @@ def CollateWorker(worker):
                 if iseop(request):
                     break
 
-        response = worker(requests, config, **kwargs)
-        send_request(sender, response)
+        try:
+            response = worker(requests, config, **kwargs)
+            send_request(sender, response)
+        except Exception as e:
+            if on_failure is not None:
+                on_failure(e)
 
         if on_closure is not None:
             on_closure()
-
-        return
 
     return wrapper

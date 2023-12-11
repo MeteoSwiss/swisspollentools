@@ -1,3 +1,74 @@
+"""
+Constants for the SwissPollenTools library.
+
+This module defines various constants used in the SwissPollenTools library.
+
+Attributes:
+    EXTRACTION_WORKER_PREFIX (str): Prefix for extraction worker.
+    INFERENCE_WORKER_PREFIX (str): Prefix for inference worker.
+    MERGE_WORKER_PREFIX (str): Prefix for merge worker.
+    TOCSVW_WORKER_PREFIX (str): Prefix for ToCSV worker.
+    TOHDF5_WORKER_PREFIX (str): Prefix for ToHDF5 worker.
+    TRAIN_WORKER_PREFIX (str): Prefix for train worker.
+    
+    KEY_SEP (str): Separator for keys in composite keys.
+    ATTRIBUTE_SEP (str): Separator for attributes in composite keys.
+    
+    HEADER_KEY (str): Key for header data.
+    BODY_KEY (str): Key for body data.
+    
+    _REQUEST_TYPE_KEY (str): Key for request type (private).
+    _FILE_PATH_KEY (str): Key for file path (private).
+    _BATCH_ID_KEY (str): Key for batch ID (private).
+    _N_ITEMS_KEY (str): Key for number of items (private).
+    _METADATA_KEY (str): Key for metadata (private).
+    _FLUODATA_KEY (str): Key for fluodata (private).
+    _REC_PROPERTIES_KEY (str): Key for record properties (private).
+    _REC_KEY (str): Key for record data (private).
+    _PREDICTION_KEY (str): Key for prediction data (private).
+    _LABEL_KEY (str): Key for label data (private).
+    
+    REQUEST_TYPE_KEY (str): Composite key for request type.
+    FILE_PATH_KEY (str): Composite key for file path.
+    N_ITEMS_KEY (str): Composite key for number of items.
+    BATCH_ID_KEY (str): Composite key for batch ID.
+    METADATA_KEY (str): Composite key for metadata.
+    FLUODATA_KEY (str): Composite key for fluodata.
+    REC_PROPERTIES_KEY (str): Composite key for record properties.
+    REC0_PROPERTIES_KEY (str): Composite key for record 0 properties.
+    REC1_PROPERTIES_KEY (str): Composite key for record 1 properties.
+    REC_KEY (str): Composite key for record data.
+    REC0_KEY (str): Composite key for record 0 data.
+    REC1_KEY (str): Composite key for record 1 data.
+    PREDICTION_KEY (str): Composite key for prediction data.
+    LABEL_KEY (str): Composite key for label data.
+
+    END_OF_TASK_VALUE (str): Value indicating the end of a task.
+    END_OF_PROCESS_VALUE (str): Value indicating the end of a process.
+    EXPECTED_N_ITEMS_VALUE (str): Value indicating the expected number of items.
+    EXTRACTION_REQUEST_VALUE (str): Value for extraction request.
+    EXTRACTION_RESPONSE_VALUE (str): Value for extraction response.
+    INFERENCE_REQUEST_VALUE (str): Value for inference request.
+    INFERENCE_RESPONSE_VALUE (str): Value for inference response.
+    MERGE_REQUEST_VALUE (str): Value for merge request.
+    MERGE_RESPONSE_VALUE (str): Value for merge response.
+    TOCSV_REQUEST_VALUE (str): Value for ToCSV request.
+    TOCSV_RESPONSE_VALUE (str): Value for ToCSV response.
+    TOHDF5_REQUEST_VALUE (str): Value for ToHDF5 request.
+    TOHDF5_RESPONSE_VALUE (str): Value for ToHDF5 response.
+    TRAIN_REQUEST_VALUE (str): Value for train request.
+    TRAIN_RESPONSE_VALUE (str): Value for train response.
+
+    LAUNCH_SLEEP_TIME (int): Sleep time for launch.
+
+    POLLENO_EVENT_SUFFIX (str): Suffix for Polleno event data files.
+    POLLENO_REC0_SUFFIX (str): Suffix for Polleno record 0 image files.
+    POLLENO_REC1_SUFFIX (str): Suffix for Polleno record 1 image files.
+
+    _NP_ARRAY_DATA_KEYS (tuple): Tuple of private keys for NumPy array data.
+    NP_ARRAY_DATA_KEYS (tuple): Tuple of keys for NumPy array data.
+"""
+
 EXTRACTION_WORKER_PREFIX = "exw"
 INFERENCE_WORKER_PREFIX = "inw"
 MERGE_WORKER_PREFIX = "mew"

@@ -21,10 +21,8 @@ def ToHDF5Request(
 def ToHDF5Req(*args, **kwargs) -> Dict:
     return ToHDF5Request(*args, **kwargs)
 
-def istohdf5req(msg: Dict) -> bool:
-    if not ismsg(msg):
-        raise ValueError("Calling `istocsvreq` on non-message dictionnary")
-    
+@assert_ismsg
+def istohdf5req(msg: Dict) -> bool:    
     return msg[REQUEST_TYPE_KEY] == TOHDF5_REQUEST_VALUE
 
 def ToHDF5Response(

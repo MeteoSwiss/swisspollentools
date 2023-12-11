@@ -37,10 +37,8 @@ def TrainRequest(
 def TrReq(*args, **kwargs):
     return TrainRequest(*args, **kwargs)
 
-def istrreq(msg: Dict) -> bool:
-    if not ismsg(msg):
-        raise ValueError("Calling `istrreq` on non-message dictionnary")
-    
+@assert_ismsg
+def istrreq(msg: Dict) -> bool:    
     return msg[REQUEST_TYPE_KEY] == TRAIN_REQUEST_VALUE
 
 def parsetrreq(msg: Dict) -> Tuple[Dict, np.ndarray, np.ndarray, List[str]]:
