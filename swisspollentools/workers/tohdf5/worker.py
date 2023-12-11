@@ -3,7 +3,7 @@ import h5py
 from pathlib import Path
 from typing import Any, Dict, Generator
 
-from swisspollentools.utils import PlPsCWorker
+from swisspollentools.utils import PullPushWorker
 from swisspollentools.workers.tohdf5.config import *
 from swisspollentools.workers.tohdf5.messages import *
 
@@ -39,7 +39,7 @@ def ToHDF5(
         file_path=file_path
     )
 
-@PlPsCWorker
+@PullPushWorker
 def ToHDF5Worker(
     request: Dict,
     config: ToHDF5WorkerConfig,

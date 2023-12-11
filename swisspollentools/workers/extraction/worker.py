@@ -22,7 +22,7 @@ from swisspollentools.workers.extraction.messages import \
 from swisspollentools.utils import \
     FILE_PATH_KEY, POLLENO_EVENT_SUFFIX, \
     POLLENO_REC0_SUFFIX, POLLENO_REC1_SUFFIX, \
-    PlPsCWorker, batchify
+    PullPushWorker, batchify
 from swisspollentools.utils.constants import \
     _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, \
     _REC_KEY, _LABEL_KEY, _NP_ARRAY_DATA_KEYS
@@ -436,7 +436,7 @@ def CSVExtraction(
             **data
         )
 
-@PlPsCWorker
+@PullPushWorker
 def ExtractionWorker(
     request: Dict,
     config: ExtractionWorkerConfig,

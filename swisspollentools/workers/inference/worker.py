@@ -49,7 +49,7 @@ def Inference(
         prediction=predictions
     )
 
-@PlPsCWorker
+@PullPushWorker
 def InferenceWorker(
     request: Dict,
     config: InferenceWorkerConfig,

@@ -77,7 +77,7 @@ def Train(
         file_path=config.trw_output_directory
     )
 
-@PlPsCWorker
+@PullPushWorker
 def TrainWorker(
     request: Dict,
     config,

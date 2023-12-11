@@ -35,7 +35,7 @@ def ToCSV(
         file_path=file_path
     )
 
-@PlPsCWorker
+@PullPushWorker
 def ToCSVWorker(
     request: Dict,
     config: ToCSVWorkerConfig,
