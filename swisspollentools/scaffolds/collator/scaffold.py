@@ -1,3 +1,11 @@
+"""
+Collator Scaffold for Many-to-Many Pipelines on HPC Devices.
+
+The Collator scaffold is an intermediate component designed for many-to-many
+cardinality pipelines in an HPC (High-Performance Computing) environment. It
+works with PyZMQ for communication and utilizes utility functions from the 
+SwissPollenTools library.
+"""
 import time
 from typing import Callable, Optional, Tuple
 
@@ -18,6 +26,51 @@ def Collator(
     on_closure: Optional[Callable]=None,
     **kwargs
 ):
+    """
+    Create and run a Collator scaffold for processing requests in a
+    many-to-many pipeline.
+
+    Parameters:
+    - request_fn (Callable): The function to process incoming requests.
+    - pull_port (int): The port for receiving data from upstream components.
+    - push_port (int): The port for sending processed data to downstream 
+    components.
+    - control_port (int): The port for control communication (PUB/SUB channel).
+    - scaffold_ports (Tuple[int]): A tuple containing two ports for scaffold
+    communication.
+    - on_startup (Optional[Callable]): An optional callback function to execute
+    on scaffold startup.
+    - on_closure (Optional[Callable]): An optional callback function to execute
+    on scaffold closure.
+    - **kwargs (Any): Additional keyword arguments for the request processing
+    function.
+
+    Returns:
+    None
+
+    Example:
+    # Example usage of the Collator scaffold
+    from swisspollentools.collator import Collator
+
+    def process_request(file_path, batch_id, response, **kwargs):
+        # Example processing logic
+        print(f"Processing request for file {file_path}, batch {batch_id}")
+
+    Collator(
+        request_fn=process_request,
+        pull_port=5555,
+        push_port=5556,
+        control_port=5557,
+        scaffold_ports=(5558, 5559),
+        on_startup=lambda: print("Collator started"),
+        on_closure=lambda: print("Collator closed")
+    )
+
+    Note:
+    - The Collator scaffold creates ZeroMQ sockets for communication, processes
+    incoming requests using the provided `request_fn` function, and handles 
+    control messages for efficient pipeline coordination.
+    """
     if on_startup is not None:
         on_startup()
 

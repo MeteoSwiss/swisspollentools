@@ -1,3 +1,12 @@
+"""
+Parallel Scaffold for Running Multiple Tasks in Parallel on a Single Message.
+
+The Parallel scaffold is designed to run multiple tasks in parallel on a single
+message in an HPC (High-Performance Computing) environment. It uses PyZMQ for
+communication and leverages utility functions from the SwissPollenTools
+library.
+"""
+
 import time
 from typing import Callable, Optional, Tuple
 
@@ -16,6 +25,42 @@ def Parallel(
     on_closure: Optional[Callable]=None,
     **kwargs
 ):
+    """
+    Create and run a Parallel scaffold for processing tasks in parallel on a
+    single message.
+
+    Parameters:
+    - pull_port (int): The port for receiving data from upstream components.
+    - push_ports (List[int]): The list of ports for sending processed data to
+    downstream components.
+    - scaffold_ports (Tuple[int]): A tuple containing ports for scaffold
+    communication.
+    - on_startup (Optional[Callable]): An optional callback function to execute
+    on scaffold startup.
+    - on_closure (Optional[Callable]): An optional callback function to execute
+    on scaffold closure.
+    - **kwargs (Any): Additional keyword arguments.
+
+    Returns:
+    None
+
+    Example:
+    # Example usage of the Parallel scaffold
+    from swisspollentools.parallel import Parallel
+
+    Parallel(
+        pull_port=5555,
+        push_ports=[5556, 5557],
+        scaffold_ports=(5558, 5559),
+        on_startup=lambda: print("Parallel scaffold started"),
+        on_closure=lambda: print("Parallel scaffold closed")
+    )
+
+    Note:
+    The Parallel scaffold creates ZeroMQ sockets for communication, runs
+    multiple tasks in parallel on a single message, and handles control
+    messages for efficient pipeline coordination.
+    """
     if not len(push_ports) == len(scaffold_ports) - 1:
         raise ValueError()
 
