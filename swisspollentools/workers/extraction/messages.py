@@ -1,3 +1,32 @@
+"""
+SwissPollenTools Extraction Worker Messages
+
+The `message.py` module defines the message structures used by the Extraction
+Worker in the SwissPollenTools library. It includes functions to create and
+check Extraction Request and Response messages.
+
+Functions:
+- `ExtractionRequest(file_path: str, batch_id: Any = None, response: Dict = {})
+-> Dict`: Creates an Extraction Request message.
+- `ExReq(*args, **kwargs) -> Dict`: Alias for `ExtractionRequest`.
+- `isexreq(msg: Dict) -> bool`: Checks if the message is an Extraction Request
+message.
+- `hass3scheme(msg: Dict) -> bool`: Checks if the message file path starts with
+the 's3://' scheme.
+- `haszipextension(msg: Dict) -> bool`: Checks if the message file path ends
+with the '.zip' extension.
+- `hashdf5extension(msg: Dict) -> bool`: Checks if the message file path ends
+with the '.hdf5' extension.
+- `hascsvextension(msg: Dict) -> bool`: Checks if the message file path ends
+with the '.csv' extension.
+- `ExtractionResponse(file_path: str, batch_id: Any = None, metadata=None,
+fluodata=None, rec_properties=None, rec0=None, rec1=None, label=None, *args,
+**kwargs) -> Dict`: Creates an Extraction Response message.
+- `ExRes(*args, **kwargs) -> Dict`: Alias for `ExtractionResponse`.
+- `isexres(msg: Dict) -> bool`: Checks if the message is an Extraction Response
+message.
+
+"""
 from typing import Any, Dict
 
 from swisspollentools.utils import *
@@ -11,10 +40,12 @@ def ExtractionRequest(
     Creates an Extraction Request message.
 
     Parameters:
-    - file_path (str): The file path to be extracted.
+    - `file_path` (str): The file path to be extracted.
+    - `batch_id` (Any, optional): The batch ID associated with the extraction.
+    - `response` (Dict, optional): Additional response data.
 
     Returns:
-    dict: Extraction Request message.
+    `Dict`: Extraction Request message.
     """
     msg = {REQUEST_TYPE_KEY: EXTRACTION_REQUEST_VALUE}
     msg[FILE_PATH_KEY] = str(file_path)
@@ -24,7 +55,7 @@ def ExtractionRequest(
 
 def ExReq(*args, **kwargs) -> Dict:
     """
-    Alias for ExtractionRequest.
+    Alias for `ExtractionRequest`.
     """
     return ExtractionRequest(*args, **kwargs)
 

@@ -7,6 +7,22 @@ def InferenceRequest(
     batch_id: Any=None,
     response: Dict={},
 ):
+    """
+    Creates an Inference Request message.
+
+    Parameters:
+    - file_path (str): The file path for which inference is requested.
+    - batch_id (Any, optional): The batch ID associated with the inference
+    request.
+    - response (Dict, optional): The response dictionary containing metadata,
+      fluorescence data, and recordings. Default is an empty dictionary.
+
+    Raises:
+    - ValueError: If the provided response is not a valid message dictionary.
+
+    Returns:
+    dict: Inference Request message.
+    """
     if not ismsg(response):
         raise ValueError()
 
@@ -35,6 +51,9 @@ def InferenceRequest(
     return msg
 
 def InReq(*args, **kwargs):
+    """
+    Alias for InferenceRequest.
+    """
     return InferenceRequest(*args, **kwargs)
 
 @assert_ismsg
@@ -51,6 +70,20 @@ def isinreq(msg: Dict) -> bool:
     return msg[REQUEST_TYPE_KEY] == INFERENCE_REQUEST_VALUE
 
 def parseinreq(msg: Dict) -> Tuple[Dict, Dict, List[int], List[int]]:
+    """
+    Parses an Inference Request message and returns metadata, fluorescence
+    data, rec0, and rec1.
+
+    Parameters:
+    - msg (dict): Message dictionary.
+
+    Raises:
+    - ValueError: If called on a non-Inference Request dictionary.
+
+    Returns:
+    Tuple[Dict, Dict, List[int], List[int]]: Tuple containing metadata,
+    fluorescence data, rec0, and rec1.
+    """
     if not isinreq(msg):
         raise ValueError(
             "Calling `parseinreq` on non Inference Request dictionnary"
@@ -71,6 +104,21 @@ def InferenceResponse(
     *args,
     **kwargs
 ) -> Dict:
+    """
+    Creates an Inference Response message.
+
+    Parameters:
+    - file_path (str): The file path associated with the inference response.
+    - batch_id (Any, optional): The batch ID associated with the inference
+    response.
+    - metadata (Dict, optional): Metadata dictionary, default is None.
+    - prediction (Any, optional): Prediction result, default is None.
+    - *args: Additional positional arguments.
+    - **kwargs: Additional keyword arguments.
+
+    Returns:
+    dict: Inference Response message.
+    """
     msg = {REQUEST_TYPE_KEY: INFERENCE_RESPONSE_VALUE}
     msg[FILE_PATH_KEY] = str(file_path)
     msg[BATCH_ID_KEY] = batch_id
@@ -93,4 +141,7 @@ def InferenceResponse(
     return msg    
 
 def InRep(*args, **kwargs):
+    """
+    Alias for InferenceResponse.
+    """
     return InferenceResponse(*args, **kwargs)

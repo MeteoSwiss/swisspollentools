@@ -1,3 +1,15 @@
+"""
+Inference Worker: worker.py
+
+This module contains functions for performing inference using a pre-trained
+model based on the provided Inference Request messages. It also includes a
+Pull-Push worker function to handle inference requests.
+
+Functions:
+- Inference: Perform inference on the provided data using a pre-trained model.
+- InferenceWorker: Pull-Push-Control worker function for handling inference
+requests.
+"""
 import numpy as np
 import tensorflow as tf
 
@@ -12,6 +24,45 @@ def Inference(
     config: InferenceWorkerConfig,
     **kwargs
 ) -> Generator:
+    """
+    Perform inference on the provided data using a pre-trained model.
+
+    Parameters:
+    - request (Dict): Inference Request message containing metadata,
+    fluorescence data, and recordings.
+    - config (InferenceWorkerConfig): Configuration object specifying
+    inference parameters.
+    - **kwargs: Additional keyword arguments. It must contain a "model" key,
+    pointing to the pre-trained model.
+
+    Yields:
+    InferenceResponse: A generator yielding Inference Response messages for
+    each batch of predictions.
+
+    Raises:
+    - RuntimeError: If the "model" key is not present in the keyword arguments.
+
+    Example:
+    request_msg = InReq(
+        file_path="./data/example.zip", batch_id=0, response=response_dict
+    )
+    inference_config = InferenceWorkerConfig(
+        inw_from_rec0=True,
+        inw_from_rec1=True,
+        inw_from_fluorescence=True,
+        inw_from_fluorescence_keys={"channel_1": "ch1", "channel_2": "ch2"},
+        inw_rec_shape=(200, 200),
+        inw_rec_precision=16,
+        inw_batch_size=1024,
+        inw_post_processing_fn=my_post_processing_function
+    )
+    model = load_pretrained_model()
+    for inference_response in Inference(
+        request_msg, inference_config, model=model
+    ):
+        # Process each Inference Response message
+        pass
+    """
     if not "model" in kwargs.keys():
         raise RuntimeError()
 
@@ -55,6 +106,20 @@ def InferenceWorker(
     config: InferenceWorkerConfig,
     **kwargs
 ) -> Generator:
+    """
+    Pull-Push-Control worker function for handling inference requests.
+
+    Parameters:
+    - request (dict): Inference Request message dictionary.
+    - config (InferenceWorkerConfig): Configuration object.
+    - **kwargs: Additional keyword arguments.
+
+    Yields:
+    InferenceResponse: A generator yielding Inference Response messages.
+
+    Raises:
+    - ValueError: If the provided message is not an Inference Request message.
+    """
     if not isinreq(request):
         raise ValueError()
     

@@ -1,3 +1,22 @@
+"""
+SwissPollenTools Extraction Worker
+
+The `worker.py` module defines the Extraction Worker, which is responsible for
+handling extraction requests. It supports extraction from various file formats
+such as ZIP archives, HDF5 files, and CSV files.
+
+Functions:
+- `ZipExtraction(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
+Generator`: Performs extraction from a ZIP archive.
+- `S3ZipExtraction(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
+Generator`: Performs extraction from a ZIP archive stored on Amazon S3.
+- `HDF5Extraction(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
+Generator`: Performs extraction from an HDF5 file.
+- `CSVExtraction(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
+Generator`: Performs extraction from a CSV file.
+- `ExtractionWorker(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
+Generator`: Main worker function for handling extraction requests.
+"""
 import re
 
 from io import BytesIO
@@ -402,6 +421,41 @@ def CSVExtraction(
     config: ExtractionWorkerConfig,
     **kwargs
 ):
+    """
+    Performs extraction of events and associated data from a CSV file.
+
+    Parameters:
+    - `request` (Dict): Extraction Request message containing the file path
+      to the CSV file.
+    - `config` (ExtractionWorkerConfig): Configuration object specifying batch
+      size and other criteria.
+    - `**kwargs`: Additional keyword arguments.
+
+    Yields:
+    `ExtractionResponse`: A generator yielding Extraction Response messages for
+    each batch of extracted data.
+
+    Example:
+    request_msg = ExReq("./data/example.csv")
+    extraction_config = ExtractionWorkerConfig(batch_size=8)
+    for extraction_response in CSVExtraction(request_msg, extraction_config):
+        # Process each Extraction Response message
+        pass
+
+    Notes:
+    - The CSV file is expected to have columns representing different types of
+    data.
+    - The function reads the CSV file, filters and organizes the data based on
+    the specified criteria in the `config` object, and yields batches of
+    `ExtractionResponse` messages.
+
+    Parameters in `ExtractionResponse`:
+    - `file_path` (str): The path to the CSV file.
+    - `batch_id` (int): The ID of the current batch.
+    - Additional parameters based on the configuration such as `metadata`,
+    `fluodata`, `rec_properties`, `rec0`, `rec1`, etc., depending on what is
+    specified to be kept.
+    """
     record = pd.read_csv(request[FILE_PATH_KEY])
 
     keys = []
