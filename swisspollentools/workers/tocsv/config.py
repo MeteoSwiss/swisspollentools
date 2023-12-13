@@ -45,4 +45,4 @@ class ToCSVWorkerConfig:
             self.tocsvw_output_directory = Path(self.tocsvw_output_directory)
 
         if not self.tocsvw_output_directory.is_dir():
-            Path.mkdir(self.tocsvw_output_directory)
+            Path.mkdir(self.tocsvw_output_directory, parents=True)

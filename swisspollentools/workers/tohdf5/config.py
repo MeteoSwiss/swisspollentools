@@ -12,4 +12,4 @@ class ToHDF5WorkerConfig:
             self.tohdf5w_output_directory = Path(self.tohdf5w_output_directory)
 
         if not self.tohdf5w_output_directory.is_dir():
-            Path.mkdir(self.tohdf5w_output_directory)
+            Path.mkdir(self.tohdf5w_output_directory, parents=True)
