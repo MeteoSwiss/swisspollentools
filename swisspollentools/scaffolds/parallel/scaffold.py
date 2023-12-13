@@ -8,7 +8,7 @@ library.
 """
 
 import time
-from typing import Callable, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import zmq
 
@@ -19,7 +19,7 @@ from swisspollentools.utils import \
 
 def Parallel(
     pull_port: int,
-    push_ports: int,
+    push_ports: List[int],
     scaffold_ports: Tuple[int],
     on_startup: Optional[Callable]=None,
     on_closure: Optional[Callable]=None,
