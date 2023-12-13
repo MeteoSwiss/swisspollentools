@@ -90,17 +90,12 @@ def Parallel(
     time.sleep(LAUNCH_SLEEP_TIME)
 
     n_tasks = float("inf")
-    eot_counter = 0
     n_tasks_counter = 0
-    while eot_counter < n_tasks:
+    while n_tasks_counter < n_tasks:
         socks = dict(poller.poll())
 
         if socks.get(receiver) == zmq.POLLIN:
             request = recv_request(receiver)
-
-            if iseot(request):
-                eot_counter += 1
-                continue
 
             for sender in senders:
                 send_request(sender, request)
