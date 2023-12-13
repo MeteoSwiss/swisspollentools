@@ -86,12 +86,8 @@ def Inference(
     dataset = dataset.batch(config.inw_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
-    predictions = []
-    for batch in dataset:
-        prediction = kwargs["model"].predict(batch, verbose=False)
-        prediction = config.inw_post_processing_fn(prediction)
-        predictions.append(prediction)
-    predictions = collate_fn(predictions, numpy_strategy="concatenate")
+    predictions = kwargs["model"].predict(dataset, verbose=0)
+    predictions = config.inw_post_processing_fn(predictions)
 
     yield InferenceResponse(
         file_path=request[FILE_PATH_KEY],

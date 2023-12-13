@@ -3,12 +3,23 @@ import tensorflow as tf
 
 from swisspollentools.pipelines import MergedInferencePipelineConfig, HPCMergedInferencePipeline
 
-class RandomModel():
-    def __init__(self):
-        pass
+class RandomModel(tf.keras.Model):
+    def __init__(self, n_categories=8):
+        super().__init__()
+        self.holo_cls = tf.keras.Sequential([
+            tf.keras.layers.InputLayer(input_shape=(200, 200)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(n_categories),
+            tf.keras.layers.Softmax()
+        ])
 
-    def predict(self, batch, *args, **kwargs):
-        return np.random.random((len(batch["rec0"]), 8))
+        self.merge_cls = tf.keras.layers.Average()
+
+    def call(self, inputs, training=False, *args, **kwargs):
+        return self.merge_cls([
+            self.holo_cls(inputs["rec0"]),
+            self.holo_cls(inputs["rec1"]),
+        ])
     
 def post_processing_fn(batch):
     predicted_class = np.argmax(batch, axis=-1)

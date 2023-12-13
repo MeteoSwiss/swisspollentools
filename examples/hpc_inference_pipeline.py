@@ -3,12 +3,23 @@ import tensorflow as tf
 
 from swisspollentools.pipelines import InferencePipelineConfig, HPCInferencePipeline
 
-class RandomModel():
-    def __init__(self):
-        pass
+class RandomModel(tf.keras.Model):
+    def __init__(self, n_categories=8):
+        super().__init__()
+        self.holo_cls = tf.keras.Sequential([
+            tf.keras.layers.InputLayer(input_shape=(200, 200)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(n_categories),
+            tf.keras.layers.Softmax()
+        ])
 
-    def predict(self, batch, *args, **kwargs):
-        return np.random.random((len(batch["rec0"]), 8))
+        self.merge_cls = tf.keras.layers.Average()
+
+    def call(self, inputs, training=False, *args, **kwargs):
+        return self.merge_cls([
+            self.holo_cls(inputs["rec0"]),
+            self.holo_cls(inputs["rec1"]),
+        ])
     
 def post_processing_fn(batch):
     predicted_class = np.argmax(batch, axis=-1)
@@ -27,22 +38,22 @@ def main():
         inw_from_fluorescence=False,
         inw_batch_size=256,
         inw_post_processing_fn=post_processing_fn,
-        tocsvw_output_directory="./tmp"
+        tocsvw_output_directory="./out"
     )
 
     pipeline = HPCInferencePipeline(
         config=config,
         n_exw=1,
-        n_inw=10,
-        n_tocsvw=10,
+        n_inw=5,
+        n_tocsvw=5,
         ports=[5000, 5001, 5002, 5003, 5004, 5005],
         c_ports=[6000, 6001, 6002],
         s_ports=[6010, 6011, 6012],
-        inw_model=RandomModel()
+        inw_get_model=lambda: RandomModel()
     )
 
-    with tf.device("/cpu:0"):
-        pipeline(["./path/to/example.zip"])
+    #with tf.device("/cpu:0"):
+    pipeline(["/scratch/mdsb/poleno_datasets_with_fluo/alnus/CH_payerne_ers_2023_02_13_1_2023-06-20_04-37-54.zip"])
 
     return
 
