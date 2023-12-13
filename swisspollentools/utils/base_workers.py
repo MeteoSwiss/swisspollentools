@@ -54,6 +54,24 @@ def getPullPushChannels(
 
     return context, receiver, sender, control, poller
 
+def process_kwargs(**kwargs):
+    get_kwargs = {
+        k.removeprefix("get_"): v \
+            for k, v in kwargs.items() \
+            if k.startswith("get_")
+    }
+    for k, v in get_kwargs.items():
+        if isinstance(v, Callable):
+            get_kwargs[k] = v()
+        elif isinstance(v, Tuple):
+            get_kwargs[k] = v[0](*v[1:])
+
+    kwargs = {k: v for k, v in kwargs.items() \
+                if not k.startswith("get_")}
+    kwargs = {**kwargs, **get_kwargs}
+
+    return kwargs
+
 def PullPushWorker(worker):
     """
     Decorator for creating Pull-Push worker functions.
@@ -108,6 +126,8 @@ def PullPushWorker(worker):
         ( context, receiver, sender,  control, poller ) = \
             getPullPushChannels(pull_port, push_port, control_port)
         time.sleep(LAUNCH_SLEEP_TIME)
+
+        kwargs = process_kwargs(**kwargs)
 
         # Message listening loop
         timeout_start = time.time()
@@ -198,6 +218,8 @@ def CollateWorker(worker):
         ( context, receiver, sender,  control, poller ) = \
             getPullPushChannels(pull_port, push_port, control_port)
         time.sleep(LAUNCH_SLEEP_TIME)
+
+        kwargs = process_kwargs(**kwargs)
 
         # Message listening loop
         timeout_start = time.time()
