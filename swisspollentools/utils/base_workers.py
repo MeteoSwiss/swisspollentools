@@ -93,6 +93,7 @@ def PullPushWorker(worker):
         timeout: float=float("inf"),
         on_startup: Optional[Callable]=None,
         on_request: Optional[Callable]=None,
+        on_response: Optional[Callable]=None,
         on_failure: Optional[Callable]=None,
         on_closure: Optional[Callable]=None,
         **kwargs
@@ -111,6 +112,8 @@ def PullPushWorker(worker):
         does not take any arguments
         - on_request (Callable): callable to be executed on the reception of a
         new request, takes the request as unique argument
+        - on_response (Callable): callable to be execute on the generation of a
+        new response, takes the response as unique argument
         - on failure (Callable): callable ot be execute when an error is raised
         within the worker, takes the error as unique argument.
         - on_closure (Callable): callable to be executed on the closure, does
@@ -143,10 +146,14 @@ def PullPushWorker(worker):
 
                 try:
                     for response in worker(request, config, **kwargs):
+                        if on_response is not None:
+                            on_response(response)
                         send_request(sender, response)
                 except Exception as e:
                     if on_failure is not None:
                         on_failure(e)
+                    else:
+                        raise Exception(e)
 
                 send_request(sender, EndOfTask())                 
 
@@ -185,6 +192,7 @@ def CollateWorker(worker):
         timeout: float=float("inf"),
         on_startup: Optional[Callable]=None,
         on_request: Optional[Callable]=None,
+        on_response: Optional[Callable]=None,
         on_failure: Optional[Callable]=None,
         on_closure: Optional[Callable]=None,
         **kwargs
@@ -203,6 +211,8 @@ def CollateWorker(worker):
         does not take any arguments
         - on_request (Callable): callable to be executed on the reception of a
         new request, takes the request as unique argument
+        - on_response (Callable): callable to be execute on the generation of a
+        new response, takes the response as unique argument
         - on failure (Callable): callable ot be execute when an error is raised
         within the worker, takes the error as unique argument.
         - on_closure (Callable): callable to be executed on the closure, does
@@ -248,10 +258,14 @@ def CollateWorker(worker):
 
         try:
             response = worker(requests, config, **kwargs)
+            if on_response is not None:
+                on_response(response)
             send_request(sender, response)
         except Exception as e:
             if on_failure is not None:
                 on_failure(e)
+            else:
+                raise Exception(e)
 
         if on_closure is not None:
             on_closure()
