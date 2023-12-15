@@ -12,6 +12,8 @@ setup(
         'h5py',
         'tensorflow',
         'pyzmq',
-        'sklearn'
+        'scikit-learn',
+        'Pillow',
+        'boto3'
     ]
 )
