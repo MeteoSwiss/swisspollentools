@@ -7,7 +7,7 @@ from typing import Callable, Optional
 
 import zmq
 
-from swisspollentools.utils.global_messages import *
+from swisspollentools.utils.messages import *
 from swisspollentools.utils.constants import *
 from swisspollentools.utils.requests import *
 
