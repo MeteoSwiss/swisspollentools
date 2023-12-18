@@ -302,3 +302,19 @@ class SchemaTuple(Schema):
         
         empty = cls(schema=empty, validate=False)
         return empty
+
+def get_auto_caster(cls, others, others_translation):
+    
+    def auto_caster(schema):
+        if cls.fit(schema):
+            return cls(schema)
+        
+        for other, other_translation in zip(others, others_translation):
+            if other.fit(schema):
+                schema = other(schema)
+                caster = other.get_caster(cls, other_translation)
+                return caster(schema)
+
+        raise ValueError("`auto_caster` could not fit any of the provided schema definition.")
+
+    return auto_caster
