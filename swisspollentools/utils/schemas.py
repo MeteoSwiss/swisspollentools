@@ -37,11 +37,11 @@ class Schema(ABC):
     def __repr__(self):
         return str(self.schema)
 
-    def values(self):
-        return [self[key] for key in self.__attr_keys__()]
+    #def values(self):
+    #    return [self[key] for key in self.__attr_keys__()]
     
-    def keys(self):
-        return [key for key in self.__attr_keys__()]
+    #def keys(self):
+    #    return [key for key in self.__attr_keys__()]
 
     @classmethod
     @abstractmethod

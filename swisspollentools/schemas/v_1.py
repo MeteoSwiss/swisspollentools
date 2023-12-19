@@ -85,3 +85,32 @@ class classificationSchema(SchemaDict):
 class eventSchema(SchemaDict):
     keys = ("rawData", "metadata", "computedData", "classification")
     dtypes = (rawDataSchema, metaDataSchema, computedDataSchema, classificationSchema)
+
+spt_translation = {
+    "metaData/eventId": "metadata/eventId",
+    "metaData/utcEvent": "metadata/utcEvent",
+    "metaData/eventBaseName": "metadata/eventBaseName",
+    "recProperties/0/area": "computedData/img0Properties/area",
+    "recProperties/0/solidity": "computedData/img0Properties/solidity",
+    "recProperties/0/majorAxis": "computedData/img0Properties/majorAxis",
+    "recProperties/0/minorAxis": "computedData/img0Properties/minorAxis",
+    "recProperties/0/perimeter": "computedData/img0Properties/perimeter",
+    "recProperties/0/coordinates": "computedData/img0Properties/coordinates",
+    "recProperties/0/eccentricity": "computedData/img0Properties/eccentricity",
+    "recProperties/0/maxIntensity": "computedData/img0Properties/maxIntensity",
+    "recProperties/0/minIntensity": "computedData/img0Properties/minIntensity",
+    "recProperties/0/meanIntensity": "computedData/img0Properties/meanIntensity",
+    "recProperties/1/area": "computedData/img1Properties/area",
+    "recProperties/1/solidity": "computedData/img1Properties/solidity",
+    "recProperties/1/majorAxis": "computedData/img1Properties/majorAxis",
+    "recProperties/1/minorAxis": "computedData/img1Properties/minorAxis",
+    "recProperties/1/perimeter": "computedData/img1Properties/perimeter",
+    "recProperties/1/coordinates": "computedData/img1Properties/coordinates",
+    "recProperties/1/eccentricity": "computedData/img1Properties/eccentricity",
+    "recProperties/1/maxIntensity": "computedData/img1Properties/maxIntensity",
+    "recProperties/1/minIntensity": "computedData/img1Properties/minIntensity",
+    "recProperties/1/meanIntensity": "computedData/img1Properties/meanIntensity",
+    "fluoData/average_std": "computedData/fluorescenceSpectra/average_std",
+    "fluoData/average_mean": "computedData/fluorescenceSpectra/average_mean",
+    "fluoData/relative_spectra": "computedData/fluorescenceSpectra/relative_spectra"
+}

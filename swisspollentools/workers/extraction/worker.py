@@ -112,9 +112,9 @@ def __zip_read_event(
     event = auto_caster(event)
 
     metadata = event["metadata"].schema
-    fluorescence_data = event["computedData"]["fluorescenceSpectra"].schema
-    rec0_properties = event["computedData"]["img0Properties"].schema
-    rec1_properties = event["computedData"]["img1Properties"].schema
+    fluorescence_data = event["fluoData"].schema
+    rec0_properties = event["recProperties"][0].schema
+    rec1_properties = event["recProperties"][1].schema
 
     if keep_metadata_key:
         metadata = {k: metadata[k] for k in keep_metadata_key}
