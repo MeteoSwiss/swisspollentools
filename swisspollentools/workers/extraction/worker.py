@@ -38,6 +38,7 @@ from swisspollentools.workers.extraction.config import \
 from swisspollentools.workers.extraction.messages import \
     ExtractionResponse, ExtractionRequest, \
     isexreq, hass3scheme, haszipextension, hashdf5extension, hascsvextension
+from swisspollentools.schemas import auto_caster
 from swisspollentools.utils import \
     FILE_PATH_KEY, POLLENO_EVENT_SUFFIX, \
     POLLENO_REC0_SUFFIX, POLLENO_REC1_SUFFIX, \
@@ -108,11 +109,12 @@ def __zip_read_event(
     """
     event = record.joinpath(event_id + POLLENO_EVENT_SUFFIX).read_bytes()
     event = json.loads(event)
+    event = auto_caster(event)
 
-    metadata = event["metadata"]
-    fluorescence_data = event["computedData"]["fluorescenceSpectra"]
-    rec0_properties = event["computedData"]["img0Properties"]
-    rec1_properties = event["computedData"]["img1Properties"]
+    metadata = event["metadata"].schema
+    fluorescence_data = event["computedData"]["fluorescenceSpectra"].schema
+    rec0_properties = event["computedData"]["img0Properties"].schema
+    rec1_properties = event["computedData"]["img1Properties"].schema
 
     if keep_metadata_key:
         metadata = {k: metadata[k] for k in keep_metadata_key}
