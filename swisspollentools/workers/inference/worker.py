@@ -83,6 +83,7 @@ def Inference(
     }
     dataset = prune_dictionary(dataset)
     dataset = tf.data.Dataset.from_tensor_slices(dataset)
+    dataset = dataset.map(config.inw_pre_processing_fn)
     dataset = dataset.batch(config.inw_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
