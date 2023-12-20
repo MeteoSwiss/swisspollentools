@@ -111,7 +111,7 @@ def __zip_read_event(
     event = json.loads(event)
     event = auto_caster(event)
 
-    metadata = event["metadata"].schema
+    metadata = event["metaData"].schema
     fluorescence_data = event["fluoData"].schema
     rec0_properties = event["recProperties"][0].schema
     rec1_properties = event["recProperties"][1].schema

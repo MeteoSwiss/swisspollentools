@@ -4,7 +4,7 @@ import swisspollentools.schemas.sptSchema as sptSchema
 from swisspollentools.utils.schemas import get_auto_caster
 
 auto_caster = get_auto_caster(
-    sptSchema, 
+    sptSchema.eventSchema, 
     [v_0.eventSchema, v_1.eventSchema],
     [v_0.spt_translation, v_1.spt_translation]
 )
