@@ -1,8 +1,91 @@
+"""
+This module provides the tools to work on the SPT Inference pipeline outputs.
+
+Example:
+--------
+```
+import datetime
+import tqdm
+import pandas as pd
+
+from swisspollentools.new_features.model_qc.model_qc import model_qc
+
+supervisor_params = {
+    "alnus": (0.85, 0.998, 100),
+    "betula": (0.95, 0.999, 50),
+    "corylus": (0.97, 0.9999, 100),
+    ...
+}
+
+models_class_dict = {
+    "0": ['alnus', 'betula', 'carpinus', ...],
+    "1": ["Alnus", "Betula", "Carpinus", ...],
+    "2": ["Alnus", "Betula", "Carpinus", ...]
+}
+models_class_dict = {
+    k: {i: l.lower() for i, l in enumerate(v) if l.lower() in supervisor_params} \
+        for k, v in models_class_dict.items()
+}
+
+hirst_class_dict = {
+    "4837": "alnus",
+    "4839": "betula",
+    "4844": "corylus",
+    ...
+}
+
+max_date = datetime.datetime(2022, 3, 1).date()
+
+poleno_station = pd.read_csv("./data/poleno-station.csv", sep=";")
+
+poleno_station["polenoId"] = poleno_station["polenoId"].apply(lambda x: f"poleno-{x}")
+poleno_station["from"] = poleno_station["from"] \
+    .apply(datetime.datetime.strptime, args=("%d.%m.%Y", )) \
+    .apply(lambda x: x.date()) \
+    .apply(lambda x: x if x < max_date else max_date)
+poleno_station["to"] = poleno_station["to"] \
+    .fillna(datetime.datetime.now().strftime("%d.%m.%Y")) \
+    .apply(datetime.datetime.strptime, args=("%d.%m.%Y", )) \
+    .apply(lambda x: x.date()) \
+    .apply(lambda x: x if x < max_date else max_date)
+
+poleno_station = poleno_station[poleno_station["locId"] > 0]
+poleno_station = poleno_station[poleno_station["from"] < poleno_station["to"]].reset_index(drop=True)
+
+for _, row in tqdm.tqdm(poleno_station.iterrows()):
+    min_date: datetime.date = row.loc["from"]
+    max_date: datetime.date = row.loc["to"]
+    min_year = min_date.year
+    max_year = max_date.year
+
+    for model in models_class_dict:
+        glob_patterns = [
+            f"./results/{year}/*/{row.loc['polenoId']}/{model}/" 
+                for year in range(min_year, max_year + 1)
+        ]
+
+        poleno_data = model_qc(
+            poleno_paths=glob_patterns,
+            hirst_path="./data/donnes_manuelles.csv",
+            station_id=row.loc["locId"],
+            model_class_dict=models_class_dict[model],
+            hirst_class_dict=hirst_class_dict,
+            supervisor_params=supervisor_params,
+            min_date=min_date,
+            max_date=max_date
+        )
+
+        out_file_name = \
+            f'{model}_{row.loc["locId"]}_{row.loc["polenoId"]}_{row.loc["from"]}_{row.loc["to"]}.csv'
+        poleno_data.to_csv(out_file_name)
+```
+"""
+
 import os
 import glob
 
 from datetime import date, datetime, timedelta
-from typing import Any, List
+from typing import Any, List, Optional
 
 import numpy as np
 import scipy as sp
@@ -12,6 +95,8 @@ def get_poleno_data(
     poleno_paths: List[str],
     model_class_dict: dict,
     supervisor_params: dict,
+    min_date: Optional[date]=None,
+    max_date: Optional[date]=None,
     atol: float=1e-1
 ) -> pd.DataFrame:
     """
@@ -26,6 +111,10 @@ def get_poleno_data(
         class, i.e. `{0: "alnus", 1: "betula", 2: "corylus"}`
     - supervisor_params: Dictionary with the parameters for the supervisor as
         `{key: (threshold_soft, threshold_hard, supervisor_numb)}`
+    - min_date: The starting date for the time series, default value is the min
+        date in the dataset
+    - max_date: The starting date for the time series, default value is the max
+        date in the dataset
     - atol: Tolerance for the verification that prediction/probs field contains
         probabilities
 
@@ -145,8 +234,10 @@ def get_poleno_data(
     hard_data = get_counts(hard_filter)
 
     # Fill the missing index
-    min_date = soft_data.index.min()
-    max_date = soft_data.index.max()
+    if not min_date:
+        min_date = soft_data.index.min()
+    if not max_date:
+        max_date = soft_data.index.max()
     delta = timedelta(1)
 
     real_index = pd.DataFrame(
@@ -155,8 +246,8 @@ def get_poleno_data(
                 for i in range(int((max_date - min_date) / delta))
         ]
     )
-    soft_data = real_index.join(soft_data).fillna(0).sort_index()
-    hard_data = real_index.join(hard_data).fillna(0).sort_index()
+    soft_data = real_index.join(soft_data).sort_index()
+    hard_data = real_index.join(hard_data).sort_index()
 
     # Compute the supervisor mask
     supervisor = hard_data \
@@ -167,14 +258,16 @@ def get_poleno_data(
     supervisor = supervisor.sort_index().sort_index(axis=1)
 
     # Apply the supervisor mask to the data
-    data = pd.DataFrame.multiply(soft_data, supervisor).astype(np.int32)
+    data = pd.DataFrame.multiply(soft_data, supervisor)
 
     return data
 
 def get_hirst_data(
     hirst_path: str,
-    poleno_id: int,
+    station_id: int,
     hirst_class_dict: dict,
+    min_date: Optional[date]=None,
+    max_date: Optional[date]=None,
     nan_value: Any=32767
 ) -> pd.DataFrame:
     """
@@ -188,9 +281,13 @@ def get_hirst_data(
     Parameters:
     -----------
     - hirst_path: Path to the csv file containing the hirst data
-    - poleno_id: Identifier of the poleno/station of interest
+    - station_id: Identifier of the poleno/station of interest
     - hirst_class_dict: Translation dictionnary from integer class to named 
         class, i.e. `{"4837": "alnus", "4839": "betula", "4844": "corylus"}`
+    - min_date: The starting date for the time series, default value is the min
+        date in the dataset
+    - max_date: The starting date for the time series, default value is the max
+        date in the dataset
     - nan_value: list of values that should be replaced by a `np.nan`
 
     Return:
@@ -213,11 +310,11 @@ def get_hirst_data(
     """
     # Load the data and filter according to the poleno_id
     data = pd.read_csv(hirst_path)
-    data = data[data["STA"] == poleno_id]
+    data = data[data["STA"] == station_id]
 
     # Format the JAHR, MO, TG columns as a date
     data["date"] = data[["JAHR", "MO", "TG"]] \
-        .apply(lambda row: date(row["JAHR"], row["MO"], row["TG"]), axis=1)
+        .apply(lambda row: date(row.loc["JAHR"], row.loc["MO"], row.loc["TG"]), axis=1)
     
     # Keep only the date (as index) and the counts columns defined in the 
     # hirst class dictionary. 
@@ -231,8 +328,10 @@ def get_hirst_data(
     data = data.replace(nan_value, np.nan)
 
     # Fill the missing index
-    min_date = data.index.min()
-    max_date = data.index.max()
+    if not min_date:
+        min_date = data.index.min()
+    if not max_date:
+        max_date = data.index.max()
     delta = timedelta(1)
 
     real_index = pd.DataFrame(
@@ -316,6 +415,7 @@ def stats_fn(
         lsuffix="Poleno",
         rsuffix="Hirst"
     )
+    joined = joined.dropna()
 
     # Compute kendall, spearman, kurtosis and sampling statistic for each 
     # pollen class
@@ -323,6 +423,10 @@ def stats_fn(
     for key in keys:
         key_poleno = key + "Poleno"
         key_hirst = key + "Hirst"
+
+        if (joined[key_poleno] == joined[key_poleno].iloc[0]).all():
+            statistics[key] = (-1,)*6
+            continue
 
         kendalltau = sp.stats.kendalltau(
             joined[key_poleno],
@@ -373,10 +477,12 @@ def stats_fn(
 def model_qc(
     poleno_paths: List[str],
     hirst_path: str,
-    poleno_id: int,
+    station_id: int,
     model_class_dict: dict,
     hirst_class_dict: dict,
     supervisor_params: dict,
+    min_date: Optional[date]=None,
+    max_date: Optional[date]=None,
     atol: float=1e-1,
     nan_value: Any=32767,
     flow: float=40 * 0.001 / 60
@@ -395,13 +501,17 @@ def model_qc(
     - poleno_paths: A list of .csv files produced with the SPT inference pipeline
         or a list of directories containing the files
     - hirst_path: Path to the csv file containing the hirst data
-    - poleno_id: Identifier of the poleno/station of interest
+    - station_id: Identifier of the poleno/station of interest
     - model_class_dict: Translation dictionnary from integer class to named 
         class, i.e. `{0: "alnus", 1: "betula", 2: "corylus"}`
     - hirst_class_dict: Translation dictionnary from integer class to named 
         class, i.e. `{"4837": "alnus", "4839": "betula", "4844": "corylus"}
     - supervisor_params: Dictionary with the parameters for the supervisor as
         `{key: (threshold_soft, threshold_hard, supervisor_numb)}`
+    - min_date: The starting date for the time series, default value is the min
+        date in the dataset
+    - max_date: The starting date for the time series, default value is the max
+        date in the dataset
     - atol: Tolerance for the verification that prediction/probs field contains
         probabilities`
     - nan_value: list of values that should be replaced by a `np.nan`
@@ -435,12 +545,16 @@ def model_qc(
         poleno_paths=poleno_paths,
         model_class_dict=model_class_dict,
         supervisor_params=supervisor_params,
+        min_date=min_date,
+        max_date=max_date,
         atol=atol
     )
     hirst_data = get_hirst_data(
         hirst_path=hirst_path,
-        poleno_id=poleno_id,
+        station_id=station_id,
         hirst_class_dict=hirst_class_dict,
+        min_date=min_date,
+        max_date=max_date,
         nan_value=nan_value
     )
     stats = stats_fn(
