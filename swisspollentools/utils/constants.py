@@ -131,9 +131,18 @@ TRAIN_RESPONSE_VALUE = "TrainResponse"
 
 LAUNCH_SLEEP_TIME=5
 
-POLLENO_EVENT_SUFFIX = "_event.json"
-POLLENO_REC0_SUFFIX = "_rec0.png"
-POLLENO_REC1_SUFFIX = "_rec1.png"
+VALID_POLENO_EVENT_SUFFIX = [
+    "_event.json",
+    "_ev.json"
+]
+VALID_POLENO_REC0_SUFFIX = [
+    "_rec0.png",
+    "_ev.computed_data.holography.image_pairs.0.0.rec_mag.png"
+]
+VALID_POLENO_REC1_SUFFIX = [
+    "_rec1.png",
+    "_ev.computed_data.holography.image_pairs.0.1.rec_mag.png"
+]
 
 _NP_ARRAY_DATA_KEYS = (
     _FLUODATA_KEY + "/",

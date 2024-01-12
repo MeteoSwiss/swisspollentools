@@ -40,12 +40,63 @@ from swisspollentools.workers.extraction.messages import \
     isexreq, hass3scheme, haszipextension, hashdf5extension, hascsvextension
 from swisspollentools.schemas import auto_caster
 from swisspollentools.utils import \
-    FILE_PATH_KEY, POLLENO_EVENT_SUFFIX, \
-    POLLENO_REC0_SUFFIX, POLLENO_REC1_SUFFIX, \
+    FILE_PATH_KEY, VALID_POLENO_EVENT_SUFFIX, \
+    VALID_POLENO_REC0_SUFFIX, VALID_POLENO_REC1_SUFFIX, \
     PullPushWorker, batchify
 from swisspollentools.utils.constants import \
     _METADATA_KEY, _FLUODATA_KEY, _REC_PROPERTIES_KEY, \
     _REC_KEY, _LABEL_KEY, _NP_ARRAY_DATA_KEYS
+
+def __zip_get_suffix(
+    record: zipfile.Path,
+    candidates: List[str]
+) -> str:
+    """
+    Select a suffix from the candidates that match the record.
+
+    Parameters:
+    -----------
+    - record (zipfile.Path): The zipfile.Path object representing the zip 
+    archive.
+    - candidates (list[str]): The list of suffix candidates
+
+    Returns:
+    --------
+    - str: The matching suffix
+
+    Raise:
+    ------
+    - ValueError: no matching suffix found or multiple matching suffix found
+    """
+    suffix = {
+        suffix for suffix in candidates \
+            if any([el.name.endswith(suffix) for el in record.iterdir()])
+        }
+    if len(suffix) != 1:
+        raise ValueError(f"Expected one valid candidate, found {len(suffix)}")
+    
+    return list(suffix)[0]
+
+def __zip_get_suffixes(
+    record: zipfile.Path
+) -> Tuple[str, str, str]:
+    """
+    Generate a tuple with the valid JSON event suffix and rec0, rec1 suffixes
+
+    Parameters:
+    -----------
+    - record (zipfile.Path): The zipfile.Path object representing the zip 
+    archive.
+
+    Returns:
+    - tuple(str, str, str): The event, rec0 and rec1 suffixes matching the
+    record
+    """
+    poleno_event_suffix = __zip_get_suffix(record, VALID_POLENO_EVENT_SUFFIX)
+    poleno_rec0_suffix = __zip_get_suffix(record, VALID_POLENO_REC0_SUFFIX)
+    poleno_rec1_suffix = __zip_get_suffix(record, VALID_POLENO_REC1_SUFFIX)
+
+    return poleno_event_suffix, poleno_rec0_suffix, poleno_rec1_suffix
 
 def __zip_get_index(
     record: zipfile.Path,
@@ -82,6 +133,7 @@ def __zip_get_index(
 def __zip_read_event(
     record: zipfile.Path,
     event_id: str,
+    suffix: str,
     keep_metadata_key: List[str]=[],
     keep_fluorescence_keys: List[str]=[],
     keep_rec_properties_keys: List[str]=[]
@@ -93,6 +145,7 @@ def __zip_read_event(
     - record (zipfile.Path): The zipfile.Path object representing the zip 
     archive.
     - event_id (str): The identifier of the event to be read.
+    - suffix (str): The suffix for the JSON event file.
     - keep_metadata_key (List[str], optional): List of metadata keys to retain,
     default is an empty list.
     - keep_fluorescence_keys (List[str], optional): List of fluorescence data
@@ -107,7 +160,7 @@ def __zip_read_event(
     - A tuple containing two dictionaries representing recording properties for
     two images (rec0 and rec1).
     """
-    event = record.joinpath(event_id + POLLENO_EVENT_SUFFIX).read_bytes()
+    event = record.joinpath(event_id + suffix).read_bytes()
     event = json.loads(event)
     event = auto_caster(event)
 
@@ -159,6 +212,7 @@ def __zip_read_rec(
 def __zip_filter_indexed_events(
     record: zipfile.Path,
     index: List[str],
+    suffix: str,
     config: ExtractionWorkerConfig
 ) -> Generator:
     """
@@ -169,6 +223,7 @@ def __zip_filter_indexed_events(
     - record (zipfile.Path): The zipfile.Path object representing the zip
     archive.
     - index (List[str]): List of event IDs to filter and process.
+    - suffix (str): The suffix for the JSON event file.
     - config (ExtractionWorkerConfig): Configuration object specifying
     filtering and retention criteria.
 
@@ -186,6 +241,7 @@ def __zip_filter_indexed_events(
         event = __zip_read_event(
             record=record,
             event_id=event_id,
+            suffix=suffix,
             keep_metadata_key=config.exw_keep_metadata_key,
             keep_fluorescence_keys=config.exw_keep_fluorescence_keys,
             keep_rec_properties_keys=config.exw_keep_rec_properties_keys
@@ -204,7 +260,8 @@ def __zip_filter_indexed_events(
 
 def __zip_filtered_recs_generator(
     record: zipfile.Path,
-    index: Generator
+    index: Generator,
+    suffixes: Tuple[str, str]
 ) -> Generator:
     """
     Generates and yields filtered recordings from a zip archive based on a
@@ -215,6 +272,8 @@ def __zip_filtered_recs_generator(
     archive.
     - index (typing.Generator): Generator yielding tuples with event ID and
     associated data.
+    - suffixes (Tuple[str, str]): Tuple containing the suffixes for rec0 and
+    rec1.
 
     Yields:
     Tuple[str, dict, dict, Tuple[dict, dict], np.ndarray, np.ndarray]: A tuple
@@ -233,8 +292,8 @@ def __zip_filtered_recs_generator(
     properties, and flattened recording data.
     """
     for event_id, data in index:
-        rec0 = __zip_read_rec(record, event_id, POLLENO_REC0_SUFFIX)
-        rec1 = __zip_read_rec(record, event_id, POLLENO_REC1_SUFFIX)
+        rec0 = __zip_read_rec(record, event_id, suffixes[0])
+        rec1 = __zip_read_rec(record, event_id, suffixes[1])
 
         yield event_id, (*data, rec0, rec1)
 
@@ -247,6 +306,7 @@ def ZipExtraction(
     Performs extraction of events and associated recordings from a zip archive.
 
     Parameters:
+    -----------
     - request (Dict): Extraction Request message containing the file path to
     the zip archive.
     - config (ExtractionWorkerConfig): Configuration object specifying
@@ -254,10 +314,13 @@ def ZipExtraction(
     - **kwargs: Additional keyword arguments.
 
     Yields:
+    -------
     ExtractionResponse: A generator yielding Extraction Response messages for
     each batch of extracted data.
 
     Example:
+    --------
+    ```
     request = ExtractionRequest(file_path="./data/example.zip")
     extraction_config = ExtractionWorkerConfig(
         batch_size=8,
@@ -270,11 +333,27 @@ def ZipExtraction(
     for extraction_response in ZipExtraction(request_msg, extraction_config):
         # Process each Extraction Response message
         pass
+    ```
     """
     record = zipfile.Path(request[FILE_PATH_KEY])
-    index = __zip_get_index(record, POLLENO_EVENT_SUFFIX, POLLENO_REC0_SUFFIX, POLLENO_REC1_SUFFIX)
-    index = __zip_filter_indexed_events(record, index, config)
-    recs_generator = __zip_filtered_recs_generator(record, index)
+    event_suffix, rec0_suffix, rec1_suffix = __zip_get_suffixes(record)
+    index = __zip_get_index(
+        record,
+        event_suffix,
+        rec0_suffix,
+        rec1_suffix
+    )
+    index = __zip_filter_indexed_events(
+        record,
+        index,
+        config,
+        event_suffix
+    )
+    recs_generator = __zip_filtered_recs_generator(
+        record,
+        index,
+        (rec0_suffix, rec1_suffix)
+    )
     for batch_id, batch in enumerate(batchify(
         recs_generator, config.exw_batch_size
     )):
