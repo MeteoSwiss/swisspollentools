@@ -15,6 +15,9 @@ class Schema(ABC):
     def __init__(self, schema, validate, allow_defaults):
         pass
 
+    def __post_init__(self):
+        pass
+
     @abstractmethod
     def __getitem__(self, key):
         pass
@@ -127,6 +130,8 @@ class SchemaDict(Schema):
 
             self[key] = schema[key]
 
+        self.__post_init__()
+
     def __getitem__(self, key):
         key = key.split(KEY_SEP, maxsplit=1)
 
@@ -226,6 +231,8 @@ class SchemaTuple(Schema):
                 raise ValueError()
             
             self[key] = schema[key]
+
+        self.__post_init__()
 
     def __getitem__(self, key):
         if isinstance(key, str):
