@@ -67,6 +67,9 @@ Attributes:
 
     _NP_ARRAY_DATA_KEYS (tuple): Tuple of private keys for NumPy array data.
     NP_ARRAY_DATA_KEYS (tuple): Tuple of keys for NumPy array data.
+
+    SIPM_DATA_MAX_ITEMS (int): Maximum number of iters in SIMP schema 
+        definition
 """
 
 EXTRACTION_WORKER_PREFIX = "exw"
