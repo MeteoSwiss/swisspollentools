@@ -6,6 +6,7 @@ handling extraction requests. It supports extraction from various file formats
 such as ZIP archives, HDF5 files, and CSV files.
 
 Functions:
+----------
 - `ZipExtraction(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
 Generator`: Performs extraction from a ZIP archive.
 - `S3ZipExtraction(request: Dict, config: ExtractionWorkerConfig, **kwargs) -> 
@@ -25,10 +26,10 @@ import tempfile
 import zipfile
 import json
 
+from typing import Dict, Generator, List, Tuple
+
 import h5py
 import pandas as pd
-
-from typing import Dict, Generator, List, Tuple
 
 from PIL import Image
 import numpy as np
@@ -70,11 +71,11 @@ def __zip_get_suffix(
     """
     suffix = {
         suffix for suffix in candidates \
-            if any([el.name.endswith(suffix) for el in record.iterdir()])
+            if any(el.name.endswith(suffix) for el in record.iterdir())
         }
     if len(suffix) != 1:
         raise ValueError(f"Expected one valid candidate, found {len(suffix)}")
-    
+
     return list(suffix)[0]
 
 def __zip_get_suffixes(
@@ -89,6 +90,7 @@ def __zip_get_suffixes(
     archive.
 
     Returns:
+    --------
     - tuple(str, str, str): The event, rec0 and rec1 suffixes matching the
     record
     """
@@ -107,16 +109,19 @@ def __zip_get_index(
     specified patterns.
 
     Parameters:
+    -----------
     - record (zipfile.Path): The zipfile.Path object representing the zip 
     archive.
     - *args (List[str]): Variable number of string arguments representing 
     patterns to match file names.
 
     Returns:
-    List[str]: A list of unique file names within the zip archive that match 
+    --------
+    - List[str]: A list of unique file names within the zip archive that match 
     all specified patterns.
 
     Note:
+    -----
     - File names are obtained by removing the specified patterns from the end
     of the file names.
     """
@@ -142,6 +147,7 @@ def __zip_read_event(
     Reads and extracts relevant information from an event within a zip archive.
 
     Parameters:
+    -----------
     - record (zipfile.Path): The zipfile.Path object representing the zip 
     archive.
     - event_id (str): The identifier of the event to be read.
@@ -154,11 +160,12 @@ def __zip_read_event(
     properties keys to retain, default is an empty list.
 
     Returns:
-    Tuple[dict, dict, Tuple[dict, dict]]: A tuple containing:
-    - A dictionary representing the metadata of the event.
-    - A dictionary representing the fluorescence data of the event.
-    - A tuple containing two dictionaries representing recording properties for
-    two images (rec0 and rec1).
+    --------
+    - Tuple[dict, dict, Tuple[dict, dict]]: A tuple containing:
+        - A dictionary representing the metadata of the event.
+        - A dictionary representing the fluorescence data of the event.
+        - A tuple containing two dictionaries representing recording properties
+        for two images (rec0 and rec1).
     """
     event = record.joinpath(event_id + suffix).read_bytes()
     event = json.loads(event)
@@ -195,6 +202,7 @@ def __zip_read_rec(
     Reads and flattens an image file within a zip archive.
 
     Parameters:
+    -----------
     - record (zipfile.Path): The zipfile.Path object representing the zip 
     archive.
     - id (str): The identifier of the recording to be read.
@@ -202,7 +210,8 @@ def __zip_read_rec(
     POLLENO_REC0_SUFFIX, POLLENO_REC1_SUFFIX).
 
     Returns:
-    np.ndarray: A flattened NumPy array representing the pixel values of the image.
+    --------
+    - np.ndarray: A flattened NumPy array representing the pixel values of the image.
     """
     rec = BytesIO(record.joinpath(event_id + suffix).read_bytes())
     rec = np.array(Image.open(rec))
@@ -220,6 +229,7 @@ def __zip_filter_indexed_events(
     configuration.
 
     Parameters:
+    -----------
     - record (zipfile.Path): The zipfile.Path object representing the zip
     archive.
     - index (List[str]): List of event IDs to filter and process.
@@ -228,12 +238,14 @@ def __zip_filter_indexed_events(
     filtering and retention criteria.
 
     Yields:
-    Tuple[str, Tuple[dict, dict, Tuple[dict, dict]]]: A tuple containing:
-    - The event ID.
-    - A tuple representing the filtered metadata, fluorescence data, and
-    recording properties for two images (rec0 and rec1).
+    -------
+    - Tuple[str, Tuple[dict, dict, Tuple[dict, dict]]]: A tuple containing:
+        - The event ID.
+        - A tuple representing the filtered metadata, fluorescence data, and
+        recording properties for two images (rec0 and rec1).
 
     Note:
+    -----
     - It applies filters specified in the config object to exclude events based
     on recording properties.
     """
@@ -268,6 +280,7 @@ def __zip_filtered_recs_generator(
     given index.
 
     Parameters:
+    -----------
     - record (zipfile.Path): The zipfile.Path object representing the zip
     archive.
     - index (typing.Generator): Generator yielding tuples with event ID and
@@ -276,16 +289,18 @@ def __zip_filtered_recs_generator(
     rec1.
 
     Yields:
-    Tuple[str, dict, dict, Tuple[dict, dict], np.ndarray, np.ndarray]: A tuple
-    containing:
-    - The event ID.
-    - Metadata dictionary.
-    - Fluorescence data dictionary.
-    - Tuple of recording properties for two images (rec0 and rec1).
-    - NumPy array representing flattened recording data for rec0.
-    - NumPy array representing flattened recording data for rec1.
+    -------
+    - Tuple[str, dict, dict, Tuple[dict, dict], np.ndarray, np.ndarray]: A
+    tuple containing:
+        - The event ID.
+        - Metadata dictionary.
+        - Fluorescence data dictionary.
+        - Tuple of recording properties for two images (rec0 and rec1).
+        - NumPy array representing flattened recording data for rec0.
+        - NumPy array representing flattened recording data for rec1.
 
     Note:
+    -----
     - Expects the index to yield tuples with event ID and associated data,
     including metadata, fluorescence, and rec_properties.
     - Yields tuples containing event ID, metadata, fluorescence data, recording 
@@ -346,8 +361,8 @@ def ZipExtraction(
     index = __zip_filter_indexed_events(
         record,
         index,
-        config,
-        event_suffix
+        event_suffix,
+        config
     )
     recs_generator = __zip_filtered_recs_generator(
         record,
@@ -382,6 +397,7 @@ def S3ZipExtraction(
     stored on Amazon S3.
 
     Parameters:
+    -----------
     - request (Dict): Extraction Request message containing the S3 file path to
     the zip archive.
     - config (ExtractionWorkerConfig): Configuration object specifying
@@ -390,10 +406,13 @@ def S3ZipExtraction(
     pointing to the S3 client.
 
     Yields:
+    -------
     ExtractionResponse: A generator yielding Extraction Response messages for
     each batch of extracted data.
 
     Example:
+    --------
+    ```
     request_msg = ExReq("s3://example_bucket/example.zip")
     extraction_config = ExtractionWorkerConfig(
         batch_size=8,
@@ -411,6 +430,7 @@ def S3ZipExtraction(
     ):
         # Process each Extraction Response message
         pass
+    ```
     """
     if "s3" not in kwargs:
         raise RuntimeError()
@@ -428,7 +448,18 @@ def S3ZipExtraction(
         request = ExtractionRequest(file.name)
         yield from ZipExtraction(request, config, **kwargs)
 
-def __hdf5_get_keys(record) -> List[str]:
+def __hdf5_get_keys(record: h5py.File) -> List[str]:
+    """
+    Returns the list of keys in an HDF5 record
+
+    Parameters:
+    -----------
+    - record (h5py.File): The HDF5 file containing the data
+
+    Returns:
+    --------
+    - List[str]: the list of keys in the HDF5 record
+    """
     keys = []
     def func(name, obj):
         if isinstance(obj, h5py.Dataset):
@@ -445,6 +476,7 @@ def HDF5Extraction(
     Performs extraction of events and associated data from an HDF5 file.
 
     Parameters:
+    -----------
     - request (Dict): Extraction Request message containing the file path
     to the HDF5 file.
     - config (ExtractionWorkerConfig): Configuration object specifying batch
@@ -452,15 +484,19 @@ def HDF5Extraction(
     - **kwargs: Additional keyword arguments.
 
     Yields:
-    ExtractionResponse: A generator yielding Extraction Response messages for
+    -------
+    - ExtractionResponse: A generator yielding Extraction Response messages for
     each batch of extracted data.
 
     Example:
+    --------
+    ```
     request_msg = ExReq("./data/example.hdf5")
     extraction_config = ExtractionWorkerConfig(batch_size=8)
     for extraction_response in HDF5Extraction(request_msg, extraction_config):
         # Process each Extraction Response message
         pass
+    ```
     """
     record = h5py.File(request[FILE_PATH_KEY])
 
@@ -506,6 +542,7 @@ def CSVExtraction(
     Performs extraction of events and associated data from a CSV file.
 
     Parameters:
+    -----------
     - `request` (Dict): Extraction Request message containing the file path
       to the CSV file.
     - `config` (ExtractionWorkerConfig): Configuration object specifying batch
@@ -513,17 +550,22 @@ def CSVExtraction(
     - `**kwargs`: Additional keyword arguments.
 
     Yields:
-    `ExtractionResponse`: A generator yielding Extraction Response messages for
-    each batch of extracted data.
+    -------
+    - `ExtractionResponse`: A generator yielding Extraction Response messages
+    for each batch of extracted data.
 
     Example:
+    --------
+    ```
     request_msg = ExReq("./data/example.csv")
     extraction_config = ExtractionWorkerConfig(batch_size=8)
     for extraction_response in CSVExtraction(request_msg, extraction_config):
         # Process each Extraction Response message
         pass
+    ```
 
     Notes:
+    ------
     - The CSV file is expected to have columns representing different types of
     data.
     - The function reads the CSV file, filters and organizes the data based on
@@ -531,6 +573,7 @@ def CSVExtraction(
     `ExtractionResponse` messages.
 
     Parameters in `ExtractionResponse`:
+    -----------------------------------
     - `file_path` (str): The path to the CSV file.
     - `batch_id` (int): The ID of the current batch.
     - Additional parameters based on the configuration such as `metadata`,
@@ -581,15 +624,18 @@ def ExtractionWorker(
     Pull-Push-Control worker function for handling extraction requests.
 
     Parameters:
+    -----------
     - request (dict): Extraction Request message dictionary.
     - config (ExtractionWorkerConfig): Configuration object.
     - **kwargs: Additional keyword arguments.
 
     Yields:
+    -------
     ExtractionResponse: A generator yielding Extraction Response messages.
 
     Note:
-    - It then determines the type of extraction (Zip, S3-Zip, HDF5, CSV) based
+    -----
+    - It determines the type of extraction (Zip, S3-Zip, HDF5, CSV) based
     on the file path.
     """
     if not isexreq(request):
