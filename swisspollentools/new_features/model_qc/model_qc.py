@@ -544,8 +544,10 @@ def confusion_matrix_fn(
     series with various combination of the Hirst time series.
     """
     # Assert the poleno dataframe and hirst dataframe have the same columns
+    # and the same length
     keys = set(poleno_data.columns).intersection(set(hirst_data.columns))
     assert len(keys) == len(poleno_data.columns)
+    assert len(poleno_data) == len(hirst_data)
 
     # Standardize the time series between 0 and 1
     poleno_data = poleno_data \
@@ -554,20 +556,37 @@ def confusion_matrix_fn(
         .replace(np.nan, 0) \
         .apply(lambda col: (col - col.min())/(col.max() - col.min()), axis=0)
     
+    non_nan_index = poleno_data != np.nan
+    poleno_data = poleno_data[non_nan_index]
+    hirst_data = hirst_data[non_nan_index]
+
     # Compute the confusion matrix
     confusion_matrix = []
     for key in keys:
         # First iteration of the lstsq
-        betas = np.linalg.lstsq(hirst_data.values, poleno_data[key].values)[0]
+        # rcond set to none to disable the future warning according to the
+        # change in version 1.14.0
+        betas = np.linalg.lstsq(
+            hirst_data.values, poleno_data[key].values, rcond=None
+        )[0]
 
         # Filter the Hirst regressor based on first lstsq iteration (i.e.
         # removing negative betas as they are not coherent)
         regressor_keys = hirst_data.columns[betas >= threshold]
         regressor_values = hirst_data.values[:, betas >= threshold]
 
+        # If no regressor pass the threshold, the residuals is set to -1,
+        # which as to be considered as nan, and the loop continue
+        if len(regressor_keys) == 0:
+            confusion_matrix.append({"residuals": -1})
+            continue
+
         # Second iteration of the lstsq with the filtered regressors
-        betas, residuals, _, _ = \
-            np.linalg.lstsq(regressor_values, poleno_data[key].values)
+        # rcond set to none to disable the future warning according to the
+        # change in version 1.14.0
+        betas, residuals, _, _ = np.linalg.lstsq(
+                regressor_values, poleno_data[key].values, rcond=None
+        )
         
         # Normalize the betas so that they sum to 1
         betas = (betas / sum(betas)).round(3)
