@@ -1,3 +1,7 @@
+"""
+Implementation of the HPCInferencePipeline and the HPCMergedInferencePipeline
+"""
+
 from  multiprocessing import Process
 
 from swisspollentools.scaffolds import Collator, Sink, Ventilator
@@ -21,18 +25,57 @@ def HPCInferencePipeline(
     s_ports,
     **kwargs
 ):
+    """
+    HPC Inference Pipeline function
+
+    Arguments:
+    ----------
+    - config: tuple with the extraction, inference and tocsv workers
+    configurations
+    - n_exw: number of workers for extraction
+    - n_inw: number of workers for inference
+    - n_tocsvw: number of workers for csv export
+    - ports: list of ports for the data-flow
+    - c_ports: list of ports for the control channels
+    - s_ports: list of ports for the scaffold channels
+    - kwargs: list of keyword arguments for the scaffolds and workers:
+        - the keyword arguments should have a prefix (`__v` for ventilator,
+        `__c1` for the first collator, `__c2` for the second collator and `__s`
+        for the sink) for the extraction worker, inference worker and to_csv
+        worker, the keyword use the `exw`, `inw` and `tocsvw` prefixes.
+
+    Returns:
+    --------
+    - Callable (inference pipeline) taking as only argument the sequence to run
+    the inference on.
+    """
     exw_config, inw_config, tocsvw_config = config
 
+    # Extract the scaffold kwargs: 
     __v_kwargs = get_subdictionary(kwargs, "__v", ATTRIBUTE_SEP)
     __c1_kwargs = get_subdictionary(kwargs, "__c1", ATTRIBUTE_SEP)
     __c2_kwargs = get_subdictionary(kwargs, "__c2", ATTRIBUTE_SEP)
     __s_kwargs = get_subdictionary(kwargs, "__s", ATTRIBUTE_SEP)
 
+    # Extract the worker kwargs
     exw_kwargs = get_subdictionary(kwargs, EXTRACTION_WORKER_PREFIX, ATTRIBUTE_SEP)
     inw_kwargs = get_subdictionary(kwargs, INFERENCE_WORKER_PREFIX, ATTRIBUTE_SEP)
     tocsvw_kwargs = get_subdictionary(kwargs, TOCSVW_WORKER_PREFIX, ATTRIBUTE_SEP)
 
     def run(sequence):
+        """
+        Inference pipeline function
+
+        Arguments:
+        ----------
+        - sequence: a list of Poleno Zip file path
+
+        Returns:
+        --------
+        - None
+        """
+        
+        # Create the scaffolds
         ventilator = Process(
             target=Ventilator,
             args=(sequence, ExtractionRequest, ports[0], s_ports[0]),
@@ -54,11 +97,13 @@ def HPCInferencePipeline(
             kwargs=__s_kwargs
         )
 
+        # Start the scaffolds
         ventilator.start()
         collator_1.start()
         collator_2.start()
         sink.start()
 
+        # Create the workers
         extraction_workers = [Process(
             target=ExtractionWorker,
             args=(exw_config, ports[0], ports[1], c_ports[0]),
@@ -75,6 +120,7 @@ def HPCInferencePipeline(
             kwargs=tocsvw_kwargs
         ) for _ in range(n_tocsvw)]
 
+        # Start the workers
         for worker in extraction_workers:
             worker.start()
         for worker in inference_workers:
