@@ -10,6 +10,6 @@ from swisspollentools.utils.schemas import get_auto_caster
 
 auto_caster = get_auto_caster(
     sptSchema.eventSchema, 
-    [v_neptune.eventSchema,v_jupiter.eventSchema, v_basic.eventSchema],
-    [v_neptune.spt_translation, v_jupiter.spt_translation, v_basic.spt_translation]
+    [v_1.eventSchema, v_basic.eventSchema, v_neptune.eventSchema,v_jupiter.eventSchema, v_jupiter_2024.eventSchema],
+    [v_1.spt_translation, v_basic.spt_translation, v_neptune.spt_translation, v_jupiter.spt_translation, v_jupiter_2024.spt_translation]
 )
