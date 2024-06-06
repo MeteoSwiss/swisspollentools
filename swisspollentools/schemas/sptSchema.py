@@ -51,14 +51,15 @@ from swisspollentools.utils.schemas import SchemaDict, SchemaTuple, NoneType
 
 class metaDataSchema(SchemaDict):
     keys = ("eventId", "utcEvent", "eventBaseName")
-    dtypes = (str, float, str)
+    dtypes = (str, (str,float), str)
 
 class recPropertiesSchema(SchemaDict):
     keys = ("area", "solidity", "majorAxis", "minorAxis", "perimeter", "coordinates", "eccentricity", "maxIntensity", "minIntensity", "meanIntensity")
-    dtypes = (float, float, float, float, float, (list, np.ndarray), float, float, float, float)
+    dtypes = ((float,int), float, float, float, float, (list, np.ndarray), float, float, float, float)
 
 class recPropertiesCollectionSchema(SchemaTuple):
     dtypes = (recPropertiesSchema, recPropertiesSchema)
+    allow_missing_keys=True
 
 class fluoDataSchema(SchemaDict):
     keys = ("average_std", "average_mean", "relative_spectra")
